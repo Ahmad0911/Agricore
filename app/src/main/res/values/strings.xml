@@ -1,0 +1,103 @@
+<resources>
+        <string name="app_name">Agricore</string>
+        <string name="app_logo">App Logo</string>
+        <string name="create_account">Create Account</string>
+        <!-- Common auth strings -->
+        <string name="email">Email</string>
+        <string name="password">Password</string>
+        <string name="confirm_password">Confirm Password</string>
+        <string name="login">Login</string>
+        <string name="register">Register</string>
+        <string name="already_have_account">Already have an account? Login</string>
+        <string name="dont_have_account">Don\'t have an account? Register</string>
+        <string name="forgot_password">Forgot Password?</string>
+        <string name="forget_password">Forgot Password</string>
+        <string name="forgot_password_title">Forgot Your Password?</string>
+        <string name="forgot_password_instructions">Enter your email address below and we\'ll send you a link to reset your password.</string>
+        <string name="reset_application">Reset Application</string>
+        <string name="reset_password">Reset Password</string>
+        <string name="add_to_favorites">Add to favorites</string>
+        <string name="welcome_to_agriecommerce">Welcome to AgriEcommerce</string>
+        <string name="full_name">Full Name</string>
+        <string name="phone_number">Phone Number</string>
+        <string name="no_products_found">No products found</string>
+        <string name="failed_to_load_products">Failed to load products</string>
+        <string name="network_error_occurred">Network error occurred</string>
+        <string name="product_not_available">Product not available</string>
+        <string name="added_to_favorites">Added to favorites</string>
+        <string name="removed_from_favorites">Removed from favorites</string>
+        <string name="search_hint">Search products...</string>
+        <string name="in_stock">In Stock</string>
+        <string name="out_of_stock">Out of Stock</string>
+        <string name="add_to_cart">Add to Cart</string>
+        <string name="sold_out">Sold Out</string>
+        <!-- Common action strings -->
+        <string name="submit">Submit</string>
+        <string name="cancel">Cancel</string>
+        <string name="save">Save</string>
+        <string name="delete">Delete</string>
+        <string name="update">Update</string>
+        <string name="email_required">Email is required</string>
+        <string name="invalid_email">Please enter a valid email address</string>
+        <string name="reset_email_sent">Password reset email sent. Check your inbox.</string>
+        <string name="password_required">Password is required</string>
+        <string name="password_min_length">Password must be at least 6 characters</string>
+        <string name="login_error">Login failed. Please try again.</string>
+        <string name="name_required">Name is required</string>
+        <string name="phone_required">Phone number is required</string>
+        <string name="invalid_phone">Invalid phone number</string>
+        <string name="confirm_password_required">Confirm password is required</string>
+        <string name="passwords_not_match">Passwords do not match</string>
+        <string name="registration_error">Registration failed. Please try again.</string>
+        <string name="your_cart">Your Cart</string>
+        <string name="back">Back</string>
+        <string name="remove_item">Remove item</string>
+        <string name="total">Total</string>
+        <string name="proceed_to_checkout">Proceed to Checkout</string>
+        <string name="your_cart_is_empty">Your cart is empty</string>
+        <string name="add_items_to_get_started">Add items to get started</string>
+        <string name="continue_shopping">Continue Shopping</string>
+        <string name="checkout">Checkout</string>
+        <string name="delivery_address">Delivery Address</string>
+        <string name="full_address">Full Address</string>
+        <string name="city">City</string>
+        <string name="postal_code">Postal Code</string>
+        <string name="payment_method">Payment Method</string>
+        <string name="order_summary">Order Summary</string>
+        <string name="subtotal">Subtotal</string>
+        <string name="delivery_fee">Delivery Fee</string>
+        <string name="discount">Discount</string>
+        <string name="place_order">Place Order</string>
+        <string name="login_here">Login here</string>
+        <string name="error">Error</string>
+        <string name="ok">OK</string>
+        <string name="price_format">$%.2f</string>
+        <!-- Product related strings -->
+        <string name="organic">Organic</string>
+        <string name="sample_product_name">Premium Basmati Rice</string>
+        <string name="sample_category">Grains and Cereals</string>
+        <string name="sample_rating">4.5</string>
+        <string name="sample_reviews">(24)</string>
+        <string name="sample_price">₦2,500</string>
+        <string name="sample_original_price">₦3,000</string>
+        <string name="sample_discount">17% OFF</string>
+        <string name="sample_unit">per 5kg bag</string>
+        <string name="unknown_product">Unknown Product</string>
+        <string name="general_category">General</string>
+        <string name="new_product">New</string>
+
+        <!-- Unit formats -->
+        <string name="per_weight_unit">per %1$.0f%2$s</string>
+        <string name="per_unit">per %s</string>
+        <string name="per_item">per item</string>
+        <string name="description">Description</string>
+        <string name="nutritional_info">Nutritional Info</string>
+        <string name="nutriscore">Nutri-Score</string>
+        <string name="product_image">Product-Image</string>
+        <string name="ingredients">Ingredients</string>
+
+
+        <!-- Discount format -->
+        <string name="discount_percent">%d%% OFF</string>
+
+</resources>

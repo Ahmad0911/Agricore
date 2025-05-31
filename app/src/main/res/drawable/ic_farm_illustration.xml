@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="300dp"
+    android:viewportWidth="300"
+    android:viewportHeight="300">
+
+    <!-- Green Field -->
+    <path
+        android:fillColor="#8BC34A"
+        android:pathData="M0,200 L300,200 L300,300 L0,300 Z"/>
+
+    <!-- Farmhouse -->
+    <path
+        android:fillColor="#FFE0B2"
+        android:pathData="M100,150 L200,150 L200,200 L100,200 Z"/>
+    <path
+        android:fillColor="#D84315"
+        android:pathData="M100,150 L150,100 L200,150 Z"/>
+
+    <!-- Crops (simplified rows) -->
+    <path
+        android:fillColor="#689F38"
+        android:pathData="M30,220 L40,220 L40,250 L30,250 Z M60,220 L70,220 L70,250 L60,250 Z M90,220 L100,220 L100,250 L90,250 Z"/>
+
+    <!-- Sun -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M250,50 Q270,70 250,90 Q230,110 210,90 Q190,70 210,50 Q230,30 250,50 Z"/>
+</vector>
