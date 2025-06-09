@@ -1,0 +1,405 @@
+{
+  "status": "success",
+  "message": "Products retrieved successfully",
+  "data": {
+    "products": [
+      {
+        "id": 1,
+        "name": "Organic Tomatoes",
+        "description": "Fresh organic produce from local farms. Rich in vitamins and perfect for cooking.",
+        "price": 2.99,
+        "priceUnit": "per kg",
+        "category": "Vegetables",
+        "subcategory": "Organic",
+        "imageUrl": "https://images.unsplash.com/photo-1546094683-6de8d7ce1c0c?w=400&h=300&fit=crop",
+        "imageRes": "ic_tomato",
+        "rating": 4.8,
+        "reviewCount": 24,
+        "badge": "Organic",
+        "inStock": true,
+        "stockQuantity": 150,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "18 per 100g",
+          "vitamin_c": "High",
+          "fiber": "Medium"
+        },
+        "tags": ["organic", "fresh", "local", "vitamin-rich"]
+      },
+      {
+        "id": 2,
+        "name": "Sweet Carrots",
+        "description": "Sweet farm-fresh carrots, perfect for snacking and cooking. High in beta-carotene.",
+        "price": 1.49,
+        "priceUnit": "per kg",
+        "category": "Vegetables",
+        "subcategory": "Root Vegetables",
+        "imageUrl": "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop",
+        "imageRes": "ic_carrot",
+        "rating": 4.6,
+        "reviewCount": 18,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 200,
+        "discount": 10,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "41 per 100g",
+          "vitamin_a": "Very High",
+          "fiber": "High"
+        },
+        "tags": ["sweet", "fresh", "beta-carotene", "crunchy"]
+      },
+      {
+        "id": 3,
+        "name": "Red Apples",
+        "description": "Juicy red apples, perfect for snacking. Crisp texture with natural sweetness.",
+        "price": 3.99,
+        "priceUnit": "per kg",
+        "category": "Fruits",
+        "subcategory": "Tree Fruits",
+        "imageUrl": "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=400&h=300&fit=crop",
+        "imageRes": "ic_apple",
+        "rating": 4.9,
+        "reviewCount": 45,
+        "badge": "Premium",
+        "inStock": true,
+        "stockQuantity": 120,
+        "discount": 0,
+        "isFavorite": true,
+        "nutritionInfo": {
+          "calories": "52 per 100g",
+          "vitamin_c": "Medium",
+          "fiber": "High"
+        },
+        "tags": ["juicy", "sweet", "crisp", "premium"]
+      },
+      {
+        "id": 4,
+        "name": "Russet Potatoes",
+        "description": "Organic russet potatoes, great for cooking, baking, and making fries.",
+        "price": 1.29,
+        "priceUnit": "per kg",
+        "category": "Vegetables",
+        "subcategory": "Root Vegetables",
+        "imageUrl": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop",
+        "imageRes": "ic_potato",
+        "rating": 4.5,
+        "reviewCount": 32,
+        "badge": "Organic",
+        "inStock": true,
+        "stockQuantity": 300,
+        "discount": 5,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "77 per 100g",
+          "potassium": "High",
+          "vitamin_c": "Medium"
+        },
+        "tags": ["organic", "versatile", "cooking", "baking"]
+      },
+      {
+        "id": 5,
+        "name": "Baby Spinach",
+        "description": "Fresh baby spinach leaves, perfect for salads and smoothies. Packed with iron.",
+        "price": 2.49,
+        "priceUnit": "per bundle",
+        "category": "Vegetables",
+        "subcategory": "Leafy Greens",
+        "imageUrl": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+        "imageRes": "ic_spinach",
+        "rating": 4.7,
+        "reviewCount": 28,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 80,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "23 per 100g",
+          "iron": "Very High",
+          "vitamin_k": "Very High"
+        },
+        "tags": ["baby", "fresh", "iron-rich", "salad"]
+      },
+      {
+        "id": 6,
+        "name": "Organic Lettuce",
+        "description": "Crisp fresh lettuce leaves, perfect for salads and sandwiches.",
+        "price": 1.99,
+        "priceUnit": "per head",
+        "category": "Vegetables",
+        "subcategory": "Leafy Greens",
+        "imageUrl": "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&h=300&fit=crop",
+        "imageRes": "ic_lettuce",
+        "rating": 4.4,
+        "reviewCount": 15,
+        "badge": "Organic",
+        "inStock": true,
+        "stockQuantity": 60,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "15 per 100g",
+          "vitamin_a": "High",
+          "folate": "Medium"
+        },
+        "tags": ["organic", "crisp", "fresh", "salad"]
+      },
+      {
+        "id": 7,
+        "name": "Bell Peppers Mix",
+        "description": "Colorful bell peppers mix - red, yellow, and green. Perfect for cooking and salads.",
+        "price": 3.49,
+        "priceUnit": "per pack",
+        "category": "Vegetables",
+        "subcategory": "Peppers",
+        "imageUrl": "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&h=300&fit=crop",
+        "imageRes": "ic_bell_pepper",
+        "rating": 4.6,
+        "reviewCount": 21,
+        "badge": "Premium",
+        "inStock": true,
+        "stockQuantity": 90,
+        "discount": 15,
+        "isFavorite": true,
+        "nutritionInfo": {
+          "calories": "31 per 100g",
+          "vitamin_c": "Very High",
+          "vitamin_a": "High"
+        },
+        "tags": ["colorful", "mix", "vitamin-c", "premium"]
+      },
+      {
+        "id": 8,
+        "name": "Green Cucumbers",
+        "description": "Fresh green cucumbers, perfect for salads, sandwiches, and healthy snacking.",
+        "price": 1.79,
+        "priceUnit": "per kg",
+        "category": "Vegetables",
+        "subcategory": "Vine Vegetables",
+        "imageUrl": "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&h=300&fit=crop",
+        "imageRes": "ic_cucumber",
+        "rating": 4.3,
+        "reviewCount": 19,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 140,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "16 per 100g",
+          "water_content": "96%",
+          "vitamin_k": "Medium"
+        },
+        "tags": ["fresh", "hydrating", "low-calorie", "crunchy"]
+      },
+      {
+        "id": 9,
+        "name": "Fresh Broccoli",
+        "description": "Fresh green broccoli crowns, packed with nutrients and perfect for steaming or stir-frying.",
+        "price": 2.29,
+        "priceUnit": "per head",
+        "category": "Vegetables",
+        "subcategory": "Cruciferous",
+        "imageUrl": "https://images.unsplash.com/photo-1628773822503-930a7eaecf80?w=400&h=300&fit=crop",
+        "imageRes": "ic_broccoli",
+        "rating": 4.5,
+        "reviewCount": 26,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 75,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "34 per 100g",
+          "vitamin_c": "Very High",
+          "vitamin_k": "Very High"
+        },
+        "tags": ["fresh", "nutritious", "vitamin-rich", "superfood"]
+      },
+      {
+        "id": 10,
+        "name": "Sweet Corn",
+        "description": "Fresh sweet corn on the cob, perfect for grilling, boiling, or roasting.",
+        "price": 0.79,
+        "priceUnit": "per ear",
+        "category": "Vegetables",
+        "subcategory": "Grain Vegetables",
+        "imageUrl": "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&h=300&fit=crop",
+        "imageRes": "ic_corn",
+        "rating": 4.7,
+        "reviewCount": 33,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 180,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "86 per 100g",
+          "fiber": "High",
+          "vitamin_b6": "Medium"
+        },
+        "tags": ["sweet", "fresh", "grilling", "summer"]
+      },
+      {
+        "id": 11,
+        "name": "Red Onions",
+        "description": "Fresh red onions with mild flavor, perfect for salads, cooking, and caramelizing.",
+        "price": 1.19,
+        "priceUnit": "per kg",
+        "category": "Vegetables",
+        "subcategory": "Bulb Vegetables",
+        "imageUrl": "https://images.unsplash.com/photo-1580201092675-a0a6a4d36963?w=400&h=300&fit=crop",
+        "imageRes": "ic_onion",
+        "rating": 4.2,
+        "reviewCount": 14,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 220,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "40 per 100g",
+          "quercetin": "High",
+          "vitamin_c": "Medium"
+        },
+        "tags": ["red", "mild", "cooking", "versatile"]
+      },
+      {
+        "id": 12,
+        "name": "Green Beans",
+        "description": "Tender green beans, perfect for steaming, sautéing, or adding to casseroles.",
+        "price": 2.99,
+        "priceUnit": "per kg",
+        "category": "Vegetables",
+        "subcategory": "Pod Vegetables",
+        "imageUrl": "https://images.unsplash.com/photo-1583468979903-29532f5440b6?w=400&h=300&fit=crop",
+        "imageRes": "ic_green_beans",
+        "rating": 4.4,
+        "reviewCount": 22,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 110,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "31 per 100g",
+          "vitamin_k": "High",
+          "folate": "Medium"
+        },
+        "tags": ["tender", "green", "fresh", "versatile"]
+      },
+      {
+        "id": 13,
+        "name": "Golden Bananas",
+        "description": "Ripe golden bananas, perfect for snacking, smoothies, and baking.",
+        "price": 1.89,
+        "priceUnit": "per bunch",
+        "category": "Fruits",
+        "subcategory": "Tropical Fruits",
+        "imageUrl": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=300&fit=crop",
+        "imageRes": "ic_banana",
+        "rating": 4.8,
+        "reviewCount": 67,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 95,
+        "discount": 0,
+        "isFavorite": true,
+        "nutritionInfo": {
+          "calories": "89 per 100g",
+          "potassium": "Very High",
+          "vitamin_b6": "High"
+        },
+        "tags": ["golden", "ripe", "potassium", "energy"]
+      },
+      {
+        "id": 14,
+        "name": "Organic Strawberries",
+        "description": "Sweet organic strawberries, perfect for desserts, smoothies, and snacking.",
+        "price": 4.99,
+        "priceUnit": "per basket",
+        "category": "Fruits",
+        "subcategory": "Berries",
+        "imageUrl": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=300&fit=crop",
+        "imageRes": "ic_strawberry",
+        "rating": 4.9,
+        "reviewCount": 89,
+        "badge": "Organic",
+        "inStock": true,
+        "stockQuantity": 45,
+        "discount": 20,
+        "isFavorite": true,
+        "nutritionInfo": {
+          "calories": "32 per 100g",
+          "vitamin_c": "Very High",
+          "antioxidants": "Very High"
+        },
+        "tags": ["organic", "sweet", "antioxidants", "premium"]
+      },
+      {
+        "id": 15,
+        "name": "Fresh Lemons",
+        "description": "Juicy fresh lemons, perfect for cooking, drinks, and adding zest to dishes.",
+        "price": 2.49,
+        "priceUnit": "per kg",
+        "category": "Fruits",
+        "subcategory": "Citrus Fruits",
+        "imageUrl": "https://images.unsplash.com/photo-1590502593747-42a996133562?w=400&h=300&fit=crop",
+        "imageRes": "ic_lemon",
+        "rating": 4.6,
+        "reviewCount": 31,
+        "badge": "Fresh",
+        "inStock": true,
+        "stockQuantity": 160,
+        "discount": 0,
+        "isFavorite": false,
+        "nutritionInfo": {
+          "calories": "29 per 100g",
+          "vitamin_c": "Very High",
+          "citric_acid": "High"
+        },
+        "tags": ["juicy", "citrus", "vitamin-c", "zesty"]
+      }
+    ],
+    "categories": [
+      {
+        "id": 1,
+        "name": "All",
+        "count": 15,
+        "isSelected": true
+      },
+      {
+        "id": 2,
+        "name": "Vegetables",
+        "count": 11,
+        "isSelected": false
+      },
+      {
+        "id": 3,
+        "name": "Fruits",
+        "count": 4,
+        "isSelected": false
+      },
+      {
+        "id": 4,
+        "name": "Organic",
+        "count": 5,
+        "isSelected": false
+      }
+    ],
+    "filters": {
+      "price_ranges": [
+        {"min": 0, "max": 1, "label": "Under $1"},
+        {"min": 1, "max": 2, "label": "$1 - $2"},
+        {"min": 2, "max": 3, "label": "$2 - $3"},
+        {"min": 3, "max": 5, "label": "$3 - $5"},
+        {"min": 5, "max": 999, "label": "Above $5"}
+      ],
+      "badges": ["Fresh", "Organic", "Premium"],
+      "ratings": [4.0, 4.5, 4.8]
+    }
+  }
+}

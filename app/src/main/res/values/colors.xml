@@ -49,6 +49,9 @@
     <color name="green_700">#388E3C</color>
     <color name="green_800">#2E7D32</color>
     <color name="green_900">#1B5E20</color>
+    <color name="purple_400">#7E57C2</color>
+
+
 
     <!-- Red Color Palette -->
     <color name="red_100">#FFCDD2</color>

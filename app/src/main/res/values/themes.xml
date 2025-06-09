@@ -1,24 +1,37 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme -->
     <style name="Theme.Agricore" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
+        <!-- Primary brand color -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
         <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
+
+        <!-- Secondary brand color -->
         <item name="colorSecondary">@color/teal_200</item>
         <item name="colorSecondaryVariant">@color/teal_700</item>
         <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/purple_700</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
 
-        <!-- Customize your theme here. -->
+        <!-- Toolbar and menu styling -->
+        <item name="actionBarStyle">@style/PurpleActionBar</item>
+        <item name="actionMenuTextColor">@color/white</item>
+        <item name="android:textColorSecondary">@color/white</item>
+
+        <!-- Menu item styling -->
+        <item name="android:itemBackground">@color/purple_500</item>
+        <item name="android:itemTextAppearance">@style/PurpleMenuItemText</item>
+        <item name="actionOverflowMenuStyle">@style/PurpleOverflowMenu</item>
+
+        <!-- Card view styling -->
+        <item name="materialCardViewStyle">@style/PurpleCardView</item>
     </style>
 
+    <!-- Toolbar title style -->
     <style name="ToolbarTitleStyle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
-        <!-- Use system Roboto font -->
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="fontFamily">sans-serif-medium</item>
         <item name="android:textSize">20sp</item>
@@ -26,5 +39,85 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <!-- Action bar style -->
+    <style name="PurpleActionBar" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="android:background">@color/purple_500</item>
+        <item name="titleTextStyle">@style/ToolbarTitleStyle</item>
+    </style>
 
+    <!-- Menu item text style -->
+    <style name="PurpleMenuItemText" parent="TextAppearance.AppCompat.Widget.ActionBar.Menu">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <!-- Overflow menu style -->
+    <style name="PurpleOverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:popupBackground">@color/purple_500</item>
+    </style>
+
+    <!-- Card view style -->
+    <style name="PurpleCardView" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/purple_400</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">8dp</item>
+    </style>
+
+    <!-- Purple Search Card style -->
+    <style name="PurpleSearchCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/purple_500</item>
+        <item name="cardElevation">8dp</item>
+        <item name="cardCornerRadius">25dp</item>
+    </style>
+
+    <!-- Search view styling -->
+    <style name="PurpleSearchView" parent="Widget.AppCompat.SearchView">
+        <!-- Background and hint text -->
+        <item name="android:background">@color/purple_500</item>
+        <item name="queryHint">Search products...</item>
+
+        <!-- Text colors -->
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorHint">@color/white</item>
+
+        <!-- Search plate styling -->
+        <item name="searchHintIcon">@null</item>
+        <item name="android:imeOptions">actionSearch</item>
+    </style>
+
+    <!-- Search toolbar style -->
+    <style name="PurpleSearchToolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="android:background">@color/purple_500</item>
+        <item name="titleTextColor">@color/white</item>
+        <item name="subtitleTextColor">@color/white</item>
+    </style>
+
+    <!-- Action bar theme -->
+    <style name="PurpleActionBarTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="searchViewStyle">@style/PurpleSearchView</item>
+        <item name="colorControlNormal">@color/white</item>
+        <item name="colorControlActivated">@color/white</item>
+    </style>
+
+    <!-- Category pill styles -->
+    <style name="CategoryPillActive" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/purple_500</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">20dp</item>
+    </style>
+
+    <style name="CategoryPillInactive" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@android:color/white</item>
+        <item name="cardElevation">2dp</item>
+        <item name="cardCornerRadius">20dp</item>
+    </style>
+
+    <!-- Modern button style -->
+    <style name="ModernButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/toolbar_gradient_background</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">25dp</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
 </resources>

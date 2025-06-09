@@ -53,44 +53,32 @@ class ProductDetailActivity : AppCompatActivity() {
 
     private fun loadProductData() {
         try {
-            // Get product data from intent - handle multiple possible keys
-            val productId = intent.getIntExtra("PRODUCT_ID",
-                intent.getIntExtra("product_id", -1))
+            // Get product data from intent - matching the keys used in ProductActivity
+            val productId = intent.getIntExtra("PRODUCT_ID", -1)
+            val productName = intent.getStringExtra("PRODUCT_NAME") ?: ""
+            val productPrice = intent.getDoubleExtra("PRODUCT_PRICE", 0.0)
+            val productDescription = intent.getStringExtra("PRODUCT_DESCRIPTION") ?: ""
+            val productImage = intent.getIntExtra("PRODUCT_IMAGE", android.R.drawable.ic_menu_gallery)
+            val productCategory = intent.getStringExtra("PRODUCT_CATEGORY") ?: "General" // Default category
 
-            val productName = intent.getStringExtra("PRODUCT_NAME")
-                ?: intent.getStringExtra("product_name")
-                ?: ""
+            Log.d("ProductDetailActivity", "Product ID: $productId, Name: $productName, Price: $productPrice")
 
-            val productPrice = intent.getDoubleExtra("PRODUCT_PRICE",
-                intent.getDoubleExtra("product_price", 0.0))
-
-            val productDescription = intent.getStringExtra("PRODUCT_DESCRIPTION")
-                ?: intent.getStringExtra("product_description")
-                ?: ""
-
-            Log.d("ProductDetailActivity", "Product ID: $productId, Name: $productName")
-
-            // Try to get product from sample data first
-            var product = getProductDetails(productId)
-
-            // If not found in sample data, create from intent data
-            if (product == null && productName.isNotEmpty()) {
-                product = Product(
+            // Create product from intent data
+            if (productName.isNotEmpty() && productPrice > 0) {
+                val product = Product(
                     id = productId,
                     name = productName,
                     description = productDescription.ifEmpty { "Fresh organic produce" },
-                    price = if (productPrice > 0) productPrice else 0.99,
-                    imageRes = getDefaultImageResource(productName)
+                    price = productPrice,
+                    category = productCategory, // Added category
+                    imageRes = productImage.toString() // Convert to String as per your Product class
                 )
-            }
 
-            // Display product details
-            product?.let {
-                displayProductDetails(it)
-                setupClickListeners(it)
-            } ?: run {
-                Log.e("ProductDetailActivity", "Product not found: ID=$productId, Name=$productName")
-                Toast.makeText(this, "Product not found", Toast.LENGTH_SHORT).show()
+                displayProductDetails(product)
+                setupClickListeners(product)
+            } else {
+                Log.e("ProductDetailActivity", "Invalid product data: ID=$productId, Name=$productName, Price=$productPrice")
+                Toast.makeText(this, "Invalid product data", Toast.LENGTH_SHORT).show()
                 finish()
             }
 
@@ -103,18 +91,28 @@ class ProductDetailActivity : AppCompatActivity() {
 
     private fun displayProductDetails(product: Product) {
         try {
-            ivProductImage.setImageResource(product.imageRes)
+            // Convert imageRes string to resource ID
+            val imageResId = ApiHelper.getDrawableResourceId(this, product.imageRes)
+            ivProductImage.setImageResource(imageResId)
             tvProductName.text = product.name
-            tvProductPrice.text = "$${"%.2f".format(product.price)}"
+            tvProductPrice.text = product.getDisplayPrice() // Using the extension function
             tvProductDescription.text = product.description
             supportActionBar?.title = product.name
+
+            Log.d("ProductDetailActivity", "Product details displayed successfully")
         } catch (e: Exception) {
             Log.e("ProductDetailActivity", "Error displaying product details", e)
             // Set fallback values
             tvProductName.text = product.name
-            tvProductPrice.text = "$${product.price}"
+            tvProductPrice.text = product.getDisplayPrice()
             tvProductDescription.text = product.description
-            ivProductImage.setImageResource(R.drawable.ic_launcher_foreground) // fallback image
+            try {
+                val imageResId = ApiHelper.getDrawableResourceId(this, product.imageRes)
+                ivProductImage.setImageResource(imageResId)
+            } catch (imgE: Exception) {
+                Log.w("ProductDetailActivity", "Error setting image, using fallback", imgE)
+                ivProductImage.setImageResource(android.R.drawable.ic_menu_gallery)
+            }
         }
     }
 
@@ -122,46 +120,26 @@ class ProductDetailActivity : AppCompatActivity() {
         btnAddToCart.setOnClickListener {
             try {
                 addToCart(product)
-                Toast.makeText(this, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
+
+                // Animate button like in ProductAdapter
+                btnAddToCart.animate()
+                    .scaleX(1.2f)
+                    .scaleY(1.2f)
+                    .setDuration(150)
+                    .withEndAction {
+                        btnAddToCart.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(150)
+                            .start()
+                    }
+                    .start()
+
+                Toast.makeText(this, "${product.name} added to cart! 🛒", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Log.e("ProductDetailActivity", "Error adding to cart", e)
                 Toast.makeText(this, "Error adding to cart", Toast.LENGTH_SHORT).show()
             }
-        }
-    }
-
-    private fun getProductDetails(productId: Int): Product? {
-        // Sample data - in a real app, this would come from a database or API
-        return when (productId) {
-            1 -> Product(1, "Organic Tomatoes", "Freshly picked organic tomatoes from local farms. Rich in vitamins and perfect for cooking.", 2.99, getImageResource("tomatoes"))
-            2 -> Product(2, "Fresh Carrots", "Sweet farm carrots, crunchy and nutritious. Great for snacking or cooking.", 1.49, getImageResource("carrots"))
-            3 -> Product(3, "Red Apples", "Juicy red apples, crisp and sweet. Perfect for healthy snacking.", 0.99, getImageResource("apples"))
-            4 -> Product(4, "Green Lettuce", "Fresh green lettuce leaves, perfect for salads and sandwiches.", 1.99, getImageResource("lettuce"))
-            5 -> Product(5, "Yellow Bananas", "Ripe yellow bananas, sweet and creamy. Rich in potassium.", 1.29, getImageResource("bananas"))
-            6 -> Product(6, "Fresh Spinach", "Organic spinach leaves, packed with nutrients and flavor.", 2.49, getImageResource("spinach"))
-            else -> null
-        }
-    }
-
-    private fun getImageResource(imageName: String): Int {
-        return try {
-            val resourceId = resources.getIdentifier("ic_$imageName", "drawable", packageName)
-            if (resourceId != 0) resourceId else getDefaultImageResource(imageName)
-        } catch (e: Exception) {
-            Log.w("ProductDetailActivity", "Image resource not found: $imageName", e)
-            getDefaultImageResource(imageName)
-        }
-    }
-
-    private fun getDefaultImageResource(productName: String): Int {
-        return when {
-            productName.contains("tomato", ignoreCase = true) -> android.R.drawable.ic_menu_gallery
-            productName.contains("carrot", ignoreCase = true) -> android.R.drawable.ic_menu_gallery
-            productName.contains("apple", ignoreCase = true) -> android.R.drawable.ic_menu_gallery
-            productName.contains("lettuce", ignoreCase = true) -> android.R.drawable.ic_menu_gallery
-            productName.contains("banana", ignoreCase = true) -> android.R.drawable.ic_menu_gallery
-            productName.contains("spinach", ignoreCase = true) -> android.R.drawable.ic_menu_gallery
-            else -> android.R.drawable.ic_menu_gallery
         }
     }
 
@@ -172,11 +150,13 @@ class ProductDetailActivity : AppCompatActivity() {
         // 2. Sending to server
         // 3. Updating shared preferences
         // 4. Broadcasting to other components
+        // 5. Integrating with CartManager.addProduct(product) when implemented
 
-        Log.d("ProductDetailActivity", "Added to cart: ${product.name}")
+        Log.d("ProductDetailActivity", "Added to cart: ${product.name} - ${product.getDisplayPrice()}")
 
-        // For now, we'll just log and show toast
+        // For now, we'll just log
         // You can replace this with actual cart implementation
+        // CartManager.addProduct(product)
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -187,5 +167,6 @@ class ProductDetailActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         // Clean up any resources if needed
+        Log.d("ProductDetailActivity", "ProductDetailActivity destroyed")
     }
 }

@@ -8,13 +8,14 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class ProductActivity : AppCompatActivity() {
 
@@ -23,44 +24,65 @@ class ProductActivity : AppCompatActivity() {
     private lateinit var productAdapter: ProductAdapter
     private lateinit var searchView: SearchView
     private lateinit var emptyStateLayout: LinearLayout
+    private lateinit var searchInfoCard: CardView
     private lateinit var searchInfoTextView: TextView
+    private lateinit var searchCard: CardView
+    private lateinit var searchHint: TextView
+    private lateinit var filterIcon: View
+    private lateinit var fabAddProduct: FloatingActionButton
+    private lateinit var btnClearSearch: TextView
 
-    private var isGridView = true // Default to grid view
-    private val spanCount = 2 // Number of columns in grid
+    // ApiHelper instance
+    private lateinit var apiHelper: ApiHelper
+
+    private var isGridView = true
+    private val spanCount = 2
+
+    // API data holders
+    private var allProducts: List<Product> = emptyList()
+    private var categories: List<Category> = emptyList()
+    private var filterOptions: FilterOptions? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("ProductActivity", "onCreate started")
+        setContentView(R.layout.activity_product)
 
         try {
-            setContentView(R.layout.activity_product)
-            Log.d("ProductActivity", "Layout set successfully")
+            // Initialize ApiHelper
+            apiHelper = ApiHelper(this)
 
-            // Initialize views
             initializeViews()
-
-            // Setup custom toolbar
             setupToolbar()
-
-            // Initialize RecyclerView with grid layout
+            setupSearchCard()
             setupRecyclerView()
+            setupCategoryPills()
+            setupFloatingActionButton()
 
-            Log.d("ProductActivity", "ProductActivity setup completed successfully")
+            // Load data from ApiHelper
+            loadDataFromApi()
 
         } catch (e: Exception) {
             Log.e("ProductActivity", "Error in onCreate", e)
-            Toast.makeText(this, "Error loading products: ${e.message}", Toast.LENGTH_LONG).show()
-            finish()
         }
     }
 
     private fun initializeViews() {
         try {
-            // Find all views
+            // Main views
             toolbar = findViewById(R.id.toolbar)
             productsRecyclerView = findViewById(R.id.productsRecyclerView)
             emptyStateLayout = findViewById(R.id.emptyStateLayout)
+
+            // Search related views
+            searchInfoCard = findViewById(R.id.searchInfoCard)
             searchInfoTextView = findViewById(R.id.tvSearchInfo)
+            searchCard = findViewById(R.id.searchCard)
+            searchHint = findViewById(R.id.searchHint)
+            filterIcon = findViewById(R.id.filterIcon)
+
+            // FAB and other controls
+            fabAddProduct = findViewById(R.id.fabAddProduct)
+            btnClearSearch = findViewById(R.id.btnClearSearch)
 
             Log.d("ProductActivity", "All views found successfully")
 
@@ -72,14 +94,11 @@ class ProductActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         try {
-            // Set toolbar as action bar
             setSupportActionBar(toolbar)
-
-            // Configure action bar
             supportActionBar?.apply {
                 setDisplayHomeAsUpEnabled(true)
                 setDisplayShowHomeEnabled(true)
-                title = "Fresh Products"
+                title = "" // Title is already set in XML
             }
 
             Log.d("ProductActivity", "Toolbar setup completed")
@@ -90,39 +109,48 @@ class ProductActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupSearchCard() {
+        try {
+            // Make search card clickable to open search
+            searchCard.setOnClickListener {
+                openSearch()
+            }
+
+            // Setup filter icon click
+            filterIcon.setOnClickListener {
+                showFilterDialog()
+            }
+
+            // Setup clear search button
+            btnClearSearch.setOnClickListener {
+                clearSearch()
+            }
+
+            Log.d("ProductActivity", "Search card setup completed")
+
+        } catch (e: Exception) {
+            Log.e("ProductActivity", "Error setting up search card", e)
+        }
+    }
+
     private fun setupRecyclerView() {
         try {
-            val products = createSampleProducts()
-            Log.d("ProductActivity", "Created ${products.size} sample products")
-
-            // Create adapter
-            productAdapter = ProductAdapter(products) { product ->
+            productAdapter = ProductAdapter(emptyList()) { product ->
                 openProductDetail(product)
             }
-            Log.d("ProductActivity", "ProductAdapter created")
 
-            // Setup RecyclerView with grid layout
             productsRecyclerView.apply {
                 layoutManager = GridLayoutManager(this@ProductActivity, spanCount).apply {
-                    // Optional: Handle span sizes for different item types
                     spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                        override fun getSpanSize(position: Int): Int {
-                            return 1 // Each item takes 1 span
-                        }
+                        override fun getSpanSize(position: Int): Int = 1
                     }
                 }
                 adapter = productAdapter
-
-                // Add item decoration for better spacing
-                addItemDecoration(GridSpacingItemDecoration(spanCount, 16, true))
-
-                // Improve scrolling performance
                 setHasFixedSize(true)
-
-                Log.d("ProductActivity", "RecyclerView setup completed with grid layout")
+                // Remove nested scrolling since we're using NestedScrollView
+                isNestedScrollingEnabled = false
             }
 
-            // Update empty state
             updateEmptyState()
 
         } catch (e: Exception) {
@@ -131,12 +159,71 @@ class ProductActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupCategoryPills() {
+        try {
+            // Category pills are already defined in XML
+            // Here you would add click listeners to each category pill
+            // For now, they're just visual elements
+
+            // You can add category filtering logic here
+            Log.d("ProductActivity", "Category pills setup completed")
+
+        } catch (e: Exception) {
+            Log.e("ProductActivity", "Error setting up category pills", e)
+        }
+    }
+
+    private fun setupFloatingActionButton() {
+        try {
+            // For now, hide the FAB as mentioned in XML
+            fabAddProduct.visibility = View.GONE
+
+            // If you want to use it later:
+            fabAddProduct.setOnClickListener {
+                // Add new product functionality
+                openAddProductActivity()
+            }
+
+        } catch (e: Exception) {
+            Log.e("ProductActivity", "Error setting up FAB", e)
+        }
+    }
+
+    private fun loadDataFromApi() {
+        try {
+            // Load products from ApiHelper
+            allProducts = apiHelper.getProducts()
+            Log.d("ProductActivity", "Loaded ${allProducts.size} products from ApiHelper")
+
+            // Load categories from ApiHelper
+            categories = apiHelper.getCategories()
+            Log.d("ProductActivity", "Loaded ${categories.size} categories from ApiHelper")
+
+            // Load filter options from ApiHelper
+            filterOptions = apiHelper.getFilterOptions()
+            filterOptions?.let {
+                Log.d("ProductActivity", "Loaded filter options from ApiHelper")
+            } ?: Log.d("ProductActivity", "No filter options available")
+
+            // Update adapter with new products
+            productAdapter.updateProducts(allProducts)
+            updateEmptyState()
+
+            Log.d("ProductActivity", "Successfully loaded all data from ApiHelper")
+
+        } catch (e: Exception) {
+            Log.e("ProductActivity", "Error loading data from ApiHelper", e)
+            // If ApiHelper fails, we still have fallback data from ApiHelper itself
+            // No need for additional fallback here since ApiHelper handles it
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         try {
             menuInflater.inflate(R.menu.menu_product, menu)
 
             val searchItem = menu?.findItem(R.id.action_search)
-            searchView = searchItem?.actionView as SearchView
+            searchView = searchItem?.actionView as? SearchView ?: return false
 
             setupSearchView()
 
@@ -152,11 +239,9 @@ class ProductActivity : AppCompatActivity() {
     private fun setupSearchView() {
         try {
             searchView.apply {
-                // Configure search view appearance
-                queryHint = "Search products..."
+                queryHint = "Search fresh products..."
                 maxWidth = Integer.MAX_VALUE
 
-                // Handle search query changes
                 setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(query: String?): Boolean {
                         searchView.clearFocus()
@@ -170,23 +255,29 @@ class ProductActivity : AppCompatActivity() {
                     }
                 })
 
-                // Handle search view expand/collapse
-                setOnSearchClickListener {
-                    Log.d("ProductActivity", "Search expanded")
-                }
-
                 setOnCloseListener {
-                    Log.d("ProductActivity", "Search closed")
                     updateSearchInfo("")
                     false
                 }
             }
 
-            Log.d("ProductActivity", "SearchView setup completed")
-
         } catch (e: Exception) {
             Log.e("ProductActivity", "Error setting up SearchView", e)
         }
+    }
+
+    private fun openSearch() {
+        // Programmatically open the search view from toolbar
+        searchView.isIconified = false
+        searchView.requestFocus()
+    }
+
+    private fun clearSearch() {
+        searchView.setQuery("", false)
+        searchView.clearFocus()
+        searchView.isIconified = true
+        updateSearchInfo("")
+        updateEmptyState()
     }
 
     private fun filterProducts(query: String) {
@@ -194,8 +285,6 @@ class ProductActivity : AppCompatActivity() {
             productAdapter.filter(query)
             updateSearchInfo(query)
             updateEmptyState()
-
-            // Scroll to top after filtering
             productsRecyclerView.scrollToPosition(0)
 
         } catch (e: Exception) {
@@ -206,14 +295,12 @@ class ProductActivity : AppCompatActivity() {
     private fun updateSearchInfo(query: String) {
         try {
             val filteredCount = productAdapter.getFilteredCount()
-            val totalCount = productAdapter.itemCount
 
             if (query.isNotEmpty()) {
                 searchInfoTextView.text = "Found $filteredCount products for '$query'"
-                searchInfoTextView.visibility = View.VISIBLE
+                searchInfoCard.visibility = View.VISIBLE
             } else {
-                searchInfoTextView.text = "Showing all products"
-                searchInfoTextView.visibility = View.GONE
+                searchInfoCard.visibility = View.GONE
             }
 
         } catch (e: Exception) {
@@ -240,10 +327,7 @@ class ProductActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_search -> {
-                // Handled by SearchView
-                true
-            }
+            R.id.action_search -> true
             R.id.action_refresh -> {
                 refreshProducts()
                 true
@@ -261,7 +345,7 @@ class ProductActivity : AppCompatActivity() {
                 true
             }
             android.R.id.home -> {
-                onBackPressed()
+                onBackPressedDispatcher.onBackPressed()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -272,7 +356,6 @@ class ProductActivity : AppCompatActivity() {
         if (!isGridView) {
             isGridView = true
             productsRecyclerView.layoutManager = GridLayoutManager(this, spanCount)
-            Toast.makeText(this, "Switched to grid view", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -280,69 +363,59 @@ class ProductActivity : AppCompatActivity() {
         if (isGridView) {
             isGridView = false
             productsRecyclerView.layoutManager = LinearLayoutManager(this)
-            Toast.makeText(this, "Switched to list view", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun refreshProducts() {
         try {
-            // Simulate refresh with new data
-            val newProducts = createSampleProducts()
-            productAdapter.updateProducts(newProducts)
-            updateEmptyState()
-            Toast.makeText(this, "Products refreshed", Toast.LENGTH_SHORT).show()
+            // Reload data from ApiHelper
+            loadDataFromApi()
+
+            Log.d("ProductActivity", "Products refreshed successfully")
 
         } catch (e: Exception) {
             Log.e("ProductActivity", "Error refreshing products", e)
-            Toast.makeText(this, "Error refreshing products", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun showFilterDialog() {
-        // TODO: Implement filter dialog
-        Toast.makeText(this, "Filter options coming soon", Toast.LENGTH_SHORT).show()
+        try {
+            // Use the loaded categories and filterOptions for filtering
+            filterOptions?.let { options ->
+                // TODO: Implement filter dialog using the loaded filterOptions
+                // You now have access to:
+                // - categories: List<Category>
+                // - options.priceRanges: List<PriceRange> (if available)
+                // - options.badges: List<String> (if available)
+                // - options.ratings: List<Double> (if available)
+
+                Log.d("ProductActivity", "Filter dialog with ${categories.size} categories")
+            } ?: run {
+                Log.w("ProductActivity", "No filter options available")
+            }
+        } catch (e: Exception) {
+            Log.e("ProductActivity", "Error showing filter dialog", e)
+        }
     }
 
-    private fun createSampleProducts(): List<Product> {
-        return try {
-            listOf(
-                Product(1, "Organic Tomatoes", "Freshly picked organic tomatoes from local farms", 2.99, android.R.drawable.ic_menu_gallery),
-                Product(2, "Sweet Carrots", "Sweet farm-fresh carrots", 1.49, android.R.drawable.ic_menu_gallery),
-                Product(3, "Red Apples", "Juicy red apples, perfect for snacking", 0.99, android.R.drawable.ic_menu_gallery),
-                Product(4, "Russet Potatoes", "Organic russet potatoes, great for cooking", 1.29, android.R.drawable.ic_menu_gallery),
-                Product(5, "Baby Spinach", "Fresh baby spinach leaves", 2.49, android.R.drawable.ic_menu_gallery),
-                Product(6, "Organic Lettuce", "Crisp fresh lettuce leaves", 1.99, android.R.drawable.ic_menu_gallery),
-                Product(7, "Bell Peppers", "Colorful bell peppers mix", 3.49, android.R.drawable.ic_menu_gallery),
-                Product(8, "Green Cucumbers", "Fresh green cucumbers", 1.79, android.R.drawable.ic_menu_gallery),
-                Product(9, "Broccoli", "Fresh green broccoli crowns", 2.29, android.R.drawable.ic_menu_gallery),
-                Product(10, "Sweet Corn", "Fresh sweet corn on the cob", 0.79, android.R.drawable.ic_menu_gallery),
-                Product(11, "Red Onions", "Fresh red onions", 1.19, android.R.drawable.ic_menu_gallery),
-                Product(12, "Green Beans", "Tender green beans", 2.99, android.R.drawable.ic_menu_gallery)
-            )
+    private fun openAddProductActivity() {
+        try {
+            // TODO: Implement add product activity
+            Log.d("ProductActivity", "Add product functionality not yet implemented")
         } catch (e: Exception) {
-            Log.e("ProductActivity", "Error creating sample products", e)
-            emptyList()
+            Log.e("ProductActivity", "Error opening add product activity", e)
         }
     }
 
     private fun openProductDetail(product: Product) {
         try {
             val intent = Intent(this, ProductDetailActivity::class.java).apply {
-                putExtra("PRODUCT_ID", product.id)
-                putExtra("PRODUCT_NAME", product.name)
-                putExtra("PRODUCT_DESCRIPTION", product.description)
-                putExtra("PRODUCT_PRICE", product.price)
+                putExtra("PRODUCT", product) // Pass the entire Product object
             }
             startActivity(intent)
         } catch (e: Exception) {
             Log.e("ProductActivity", "Error opening product detail", e)
-            Toast.makeText(this, "Product detail not available yet", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
     }
 
     override fun onBackPressed() {

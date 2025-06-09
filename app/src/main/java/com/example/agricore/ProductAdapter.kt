@@ -3,7 +3,6 @@ package com.example.agricore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -15,24 +14,76 @@ class ProductAdapter(
     private val onProductClick: (Product) -> Unit
 ) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
 
-    // Filtered list that will be displayed
     private var filteredProducts: MutableList<Product> = originalProducts.toMutableList()
 
     inner class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        // Views from item_product.xml
         val productImage: ImageView = itemView.findViewById(R.id.ivProductImage)
         val productName: TextView = itemView.findViewById(R.id.tvProductName)
         val productDescription: TextView = itemView.findViewById(R.id.tvProductDescription)
         val productPrice: TextView = itemView.findViewById(R.id.tvProductPrice)
+        val priceUnit: TextView = itemView.findViewById(R.id.tvPriceUnit)
+        val rating: TextView = itemView.findViewById(R.id.tvRating)
+        val badge: TextView = itemView.findViewById(R.id.tvBadge)
+        val favoriteIcon: ImageView = itemView.findViewById(R.id.ivFavorite)
         val addToCartButton: TextView = itemView.findViewById(R.id.btnAddToCart)
 
         fun bind(product: Product) {
             try {
+                // Set basic product info
                 productName.text = product.name
                 productDescription.text = product.description
                 productPrice.text = "$${String.format("%.2f", product.price)}"
+                priceUnit.text = product.priceUnit
 
-                // Set product image (using default for now)
-                productImage.setImageResource(android.R.drawable.ic_menu_gallery)
+                // Set product image - FIXED: Use getDrawableResourceId to convert string to resource ID
+                val imageResId = ApiHelper.getDrawableResourceId(itemView.context, product.imageRes)
+                productImage.setImageResource(imageResId)
+
+                // Set rating from actual product data
+                rating.text = product.getDisplayRating()
+
+                // Set badge from product data
+                badge.text = product.badge.ifEmpty {
+                    when {
+                        product.name.contains("Organic", ignoreCase = true) -> "Organic"
+                        product.name.contains("Fresh", ignoreCase = true) -> "Fresh"
+                        product.price > 2.0 -> "Premium"
+                        else -> "Fresh"
+                    }
+                }
+
+                // Set favorite state from product data
+                favoriteIcon.setImageResource(
+                    if (product.isFavorite) android.R.drawable.btn_star_big_on
+                    else android.R.drawable.btn_star_big_off
+                )
+
+                var isFavorite = product.isFavorite
+                favoriteIcon.setOnClickListener {
+                    isFavorite = !isFavorite
+                    favoriteIcon.setImageResource(
+                        if (isFavorite) android.R.drawable.btn_star_big_on
+                        else android.R.drawable.btn_star_big_off
+                    )
+
+                    // Add animation
+                    favoriteIcon.animate()
+                        .scaleX(1.3f)
+                        .scaleY(1.3f)
+                        .setDuration(150)
+                        .withEndAction {
+                            favoriteIcon.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(150)
+                                .start()
+                        }
+                        .start()
+
+                    val message = if (isFavorite) "Added to favorites ❤️" else "Removed from favorites"
+                    Toast.makeText(itemView.context, message, Toast.LENGTH_SHORT).show()
+                }
 
                 // Add entrance animation
                 itemView.alpha = 0f
@@ -42,14 +93,14 @@ class ProductAdapter(
                     .setStartDelay((adapterPosition * 50).toLong())
                     .start()
 
-                // Handle item click with modern animation
+                // Handle item click
                 itemView.setOnClickListener {
                     animateClick(itemView) {
                         onProductClick(product)
                     }
                 }
 
-                // Handle add to cart button with modern animation
+                // Handle add to cart button
                 addToCartButton.setOnClickListener {
                     animateClick(it) {
                         addToCart(product)
@@ -59,8 +110,11 @@ class ProductAdapter(
             } catch (e: Exception) {
                 // Handle binding errors gracefully
                 productName.text = "Product"
-                productDescription.text = "Description not available"
+                productDescription.text = "Fresh organic produce"
                 productPrice.text = "$0.00"
+                priceUnit.text = "per kg"
+                rating.text = "4.0"
+                badge.text = "Fresh"
             }
         }
 
@@ -86,17 +140,17 @@ class ProductAdapter(
             try {
                 val context = itemView.context
 
-                // Show success feedback with custom toast
+                // Show success feedback
                 Toast.makeText(
                     context,
                     "${product.name} added to cart! 🛒",
                     Toast.LENGTH_SHORT
                 ).show()
 
-                // Add ripple effect to the button
+                // Animate the add to cart button
                 addToCartButton.animate()
-                    .scaleX(1.1f)
-                    .scaleY(1.1f)
+                    .scaleX(1.2f)
+                    .scaleY(1.2f)
                     .setDuration(150)
                     .withEndAction {
                         addToCartButton.animate()
@@ -106,9 +160,6 @@ class ProductAdapter(
                             .start()
                     }
                     .start()
-
-                // Here you would typically add the product to an actual cart
-                // CartManager.addProduct(product)
 
             } catch (e: Exception) {
                 Toast.makeText(itemView.context, "Error adding to cart", Toast.LENGTH_SHORT).show()
@@ -122,7 +173,6 @@ class ProductAdapter(
                 .inflate(R.layout.item_product, parent, false)
             ProductViewHolder(itemView)
         } catch (e: Exception) {
-            // Fallback in case of layout inflation error
             throw RuntimeException("Error creating ViewHolder: ${e.message}", e)
         }
     }
@@ -133,36 +183,33 @@ class ProductAdapter(
                 holder.bind(filteredProducts[position])
             }
         } catch (e: Exception) {
-            // Log error but don't crash the app
             e.printStackTrace()
         }
     }
 
     override fun getItemCount(): Int = filteredProducts.size
 
-    // Enhanced search functionality with better performance
     fun filter(query: String) {
         try {
             val oldSize = filteredProducts.size
             filteredProducts.clear()
 
             if (query.isEmpty()) {
-                // If search is empty, show all products
                 filteredProducts.addAll(originalProducts)
             } else {
-                // Filter products based on name, description, and price
                 val searchQuery = query.lowercase(Locale.getDefault()).trim()
 
                 filteredProducts.addAll(
                     originalProducts.filter { product ->
                         product.name.lowercase(Locale.getDefault()).contains(searchQuery) ||
                                 product.description.lowercase(Locale.getDefault()).contains(searchQuery) ||
+                                product.category.lowercase(Locale.getDefault()).contains(searchQuery) ||
                                 String.format("%.2f", product.price).contains(searchQuery)
                     }
                 )
             }
 
-            // Use more efficient notification methods
+            // Efficient notification
             if (oldSize == filteredProducts.size) {
                 notifyItemRangeChanged(0, filteredProducts.size)
             } else {
@@ -170,21 +217,18 @@ class ProductAdapter(
             }
 
         } catch (e: Exception) {
-            // Handle filter errors gracefully
             filteredProducts.clear()
             filteredProducts.addAll(originalProducts)
             notifyDataSetChanged()
         }
     }
 
-    // Method to update the product list with smooth animations
     fun updateProducts(newProducts: List<Product>) {
         try {
             val oldSize = filteredProducts.size
             filteredProducts.clear()
             filteredProducts.addAll(newProducts)
 
-            // Animate the changes
             if (newProducts.size > oldSize) {
                 notifyItemRangeInserted(oldSize, newProducts.size - oldSize)
             } else if (newProducts.size < oldSize) {
@@ -194,18 +238,14 @@ class ProductAdapter(
             }
 
         } catch (e: Exception) {
-            // Fallback to simple refresh
             notifyDataSetChanged()
         }
     }
 
-    // Get current filtered products count for empty state handling
     fun getFilteredCount(): Int = filteredProducts.size
 
-    // Method to get filtered products (useful for other operations)
     fun getFilteredProducts(): List<Product> = filteredProducts.toList()
 
-    // Method to refresh all items with animation
     fun refreshWithAnimation() {
         for (i in filteredProducts.indices) {
             notifyItemChanged(i)

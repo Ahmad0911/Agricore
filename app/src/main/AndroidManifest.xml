@@ -45,6 +45,17 @@
             android:parentActivityName=".LoginActivity"
             android:theme="@style/Theme.Agricore" />
 
+        <!-- Product Detail Activity -->
+        <activity
+            android:name=".ProductDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ProductActivity"
+            android:theme="@style/Theme.Agricore">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ProductActivity" />
+        </activity>
+
     </application>
 
 </manifest>
