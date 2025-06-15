@@ -1,337 +1,200 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F7FA"
-    android:fitsSystemWindows="true"
-    tools:context=".ProductActivity">
+    android:orientation="vertical">
 
-    <!-- App Bar Layout with proper status bar handling -->
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLayout"
+    <!-- Header with search and filters -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fitsSystemWindows="true"
-        android:theme="@style/PurpleCardView"
-        app:elevation="0dp">
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="?attr/colorPrimarySurface">
 
-        <!-- Modern Toolbar with gradient background -->
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@drawable/toolbar_gradient_background"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="8dp"
-            app:title="Fresh Products"
-            app:titleTextColor="@android:color/white"
-            app:titleTextAppearance="@style/ToolbarTitleStyle"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:layout_scrollFlags="scroll|enterAlways|snap"
-            app:contentInsetStartWithNavigation="0dp" />
-
-        <!-- Modern Search Card -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/searchCard"
-            android:layout_width="match_parent"
+        <Spinner
+            android:id="@+id/spinner_sort"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="25dp"
-            app:cardElevation="8dp"
-            app:cardBackgroundColor="@android:color/white">
+            android:layout_weight="1"
+            android:background="@drawable/bg_spinner"
+            android:popupBackground="@drawable/bg_spinner_dropdown" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="12dp">
+        <ImageButton
+            android:id="@+id/btn_filter"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/filter_button_desc"
+            android:src="@drawable/ic_filter" />
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@android:drawable/ic_menu_search"
-                    android:alpha="0.6"
-                    android:layout_marginEnd="12dp"
-                    android:contentDescription="Search icon" />
+    </LinearLayout>
 
-                <TextView
-                    android:id="@+id/searchHint"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Search fresh products..."
-                    android:textSize="16sp"
-                    android:textColor="#9E9E9E"
-                    android:background="@null"
-                    android:clickable="false" />
-
-                <ImageView
-                    android:id="@+id/filterIcon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@android:drawable/ic_menu_sort_by_size"
-                    android:alpha="0.7"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="4dp"
-                    android:contentDescription="Filter" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- Main Content with proper scrolling -->
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/nestedScrollView"
+    <!-- Category chips -->
+    <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="false"
+        android:layout_height="wrap_content"
         android:scrollbars="none"
-        android:overScrollMode="never"
-        android:fadeScrollbars="true"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:background="?attr/colorPrimarySurface">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_categories"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:padding="8dp"
+            app:singleSelection="true" />
 
-            <!-- Modern Category Pills -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp">
+    </HorizontalScrollView>
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp">
+    <!-- Product count -->
+    <TextView
+        android:id="@+id/tv_product_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:text="@string/loading_products"
+        android:textSize="14sp" />
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="2dp"
-                        app:cardBackgroundColor="#4CAF50">
+    <!-- Main content area -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="All"
-                            android:textColor="@android:color/white"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:paddingHorizontal="20dp"
-                            android:paddingVertical="8dp" />
+        <!-- Products list with swipe refresh -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-                    </androidx.cardview.widget.CardView>
-
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="2dp"
-                        app:cardBackgroundColor="@android:color/white">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Vegetables"
-                            android:textColor="#666666"
-                            android:textSize="14sp"
-                            android:paddingHorizontal="20dp"
-                            android:paddingVertical="8dp" />
-
-                    </androidx.cardview.widget.CardView>
-
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="2dp"
-                        app:cardBackgroundColor="@android:color/white">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Fruits"
-                            android:textColor="#666666"
-                            android:textSize="14sp"
-                            android:paddingHorizontal="20dp"
-                            android:paddingVertical="8dp" />
-
-                    </androidx.cardview.widget.CardView>
-
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="2dp"
-                        app:cardBackgroundColor="@android:color/white">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Organic"
-                            android:textColor="#666666"
-                            android:textSize="14sp"
-                            android:paddingHorizontal="20dp"
-                            android:paddingVertical="8dp" />
-
-                    </androidx.cardview.widget.CardView>
-
-                </LinearLayout>
-
-            </HorizontalScrollView>
-
-            <!-- Search Results Info with modern design -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/searchInfoCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="#E8F5E8">
-
-                <TextView
-                    android:id="@+id/tvSearchInfo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:text="Showing all products"
-                    android:textSize="14sp"
-                    android:textColor="#2E7D2E"
-                    android:textStyle="bold"
-                    android:drawableStart="@android:drawable/ic_search_category_default"
-                    android:drawablePadding="8dp"
-                    android:gravity="center_vertical" />
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Products RecyclerView - FIXED SCROLLING -->
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/productsRecyclerView"
+                android:id="@+id/recycler_view_products"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:padding="8dp"
-                android:paddingBottom="80dp"
-                android:clipToPadding="false"
-                android:nestedScrollingEnabled="false"
-                android:scrollbars="none"
-                android:overScrollMode="never"
-                tools:listitem="@layout/item_product" />
+                android:clipToPadding="false" />
 
-            <!-- Modern Empty State View -->
-            <LinearLayout
-                android:id="@+id/emptyStateLayout"
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <!-- Loading state -->
+        <LinearLayout
+            android:id="@+id/layout_loading"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminateTint="?attr/colorPrimary" />
+
+            <TextView
+                android:id="@+id/tv_loading_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/loading_products"
+                android:textColor="?android:attr/textColorSecondary" />
+        </LinearLayout>
+
+        <!-- Empty state -->
+        <LinearLayout
+            android:id="@+id/layout_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/iv_empty_image"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_empty_box"
+                app:tint="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/tv_empty_message"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="64dp"
-                android:orientation="vertical"
+                android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:padding="32dp"
-                android:visibility="gone">
+                android:text="@string/no_products_found"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="18sp" />
 
-                <androidx.cardview.widget.CardView
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    android:layout_marginBottom="24dp"
-                    app:cardCornerRadius="60dp"
-                    app:cardElevation="8dp"
-                    app:cardBackgroundColor="#F0F8F0">
-
-                    <ImageView
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_gravity="center"
-                        android:src="@android:drawable/ic_search_category_default"
-                        android:alpha="0.5"
-                        android:contentDescription="No products found" />
-
-                </androidx.cardview.widget.CardView>
-
-                <TextView
-                    android:id="@+id/tvEmptyStateTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="No products found"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="#2C2C2C"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:id="@+id/tvEmptyStateMessage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Try adjusting your search terms or browse categories"
-                    android:textSize="16sp"
-                    android:textColor="#757575"
-                    android:gravity="center"
-                    android:layout_marginBottom="24dp" />
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:cardCornerRadius="25dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="#4CAF50"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground">
-
-                    <TextView
-                        android:id="@+id/btnClearSearch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Clear Search"
-                        android:textColor="@android:color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:paddingHorizontal="24dp"
-                        android:paddingVertical="12dp" />
-
-                </androidx.cardview.widget.CardView>
-
-            </LinearLayout>
+            <TextView
+                android:id="@+id/tv_empty_sub_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="@string/try_adjusting_search"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="14sp" />
 
         </LinearLayout>
 
-    </androidx.core.widget.NestedScrollView>
+        <!-- Error state -->
+        <LinearLayout
+            android:id="@+id/layout_error_state"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="gone">
 
-    <!-- Modern Floating Action Button -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddProduct"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:layout_anchor="@id/nestedScrollView"
-        app:layout_anchorGravity="bottom|end"
-        app:srcCompat="@android:drawable/ic_input_add"
-        app:backgroundTint="#FF6B35"
-        app:tint="@android:color/white"
-        app:elevation="8dp"
-        app:pressedTranslationZ="16dp"
-        android:contentDescription="Add new product"
-        android:visibility="gone" />
+            <ImageView
+                android:id="@+id/iv_error_image"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_placeholder_error"
+                app:tint="?attr/colorError" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+            <TextView
+                android:id="@+id/tv_error_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="@string/something_went_wrong"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/btn_retry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="?attr/colorPrimary"
+                android:text="@string/retry"
+                android:textColor="?attr/colorOnPrimary" />
+
+        </LinearLayout>
+
+        <!-- View toggle FAB -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_toggle_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:contentDescription="@string/toggle_view_mode"
+            android:src="@drawable/ic_grid_view"
+            app:backgroundTint="?attr/colorPrimary"
+            app:tint="?attr/colorOnPrimary" />
+
+    </FrameLayout>
+
+</LinearLayout>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Shimmer Effect Placeholders -->
+        <!-- Main product image placeholder -->
+        <View
+            android:id="@+id/placeholder_image"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:background="@color/gray_200"/>
+
+        <!-- Product name placeholder -->
+        <View
+            android:id="@+id/placeholder_name"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_toEndOf="@id/placeholder_image"
+            android:background="@color/gray_200"/>
+
+        <!-- Product price placeholder -->
+        <View
+            android:id="@+id/placeholder_price"
+            android:layout_width="100dp"
+            android:layout_height="16dp"
+            android:layout_below="@id/placeholder_name"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_toEndOf="@id/placeholder_image"
+            android:background="@color/gray_200"/>
+
+        <!-- Product rating placeholder -->
+        <View
+            android:id="@+id/placeholder_rating"
+            android:layout_width="60dp"
+            android:layout_height="16dp"
+            android:layout_below="@id/placeholder_price"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_toEndOf="@id/placeholder_image"
+            android:background="@color/gray_200"/>
+
+        <!-- Button placeholder -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_below="@id/placeholder_rating"
+            android:layout_marginTop="16dp"
+            android:background="@color/gray_200"/>
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

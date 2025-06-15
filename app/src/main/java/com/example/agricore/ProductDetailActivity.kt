@@ -71,7 +71,13 @@ class ProductDetailActivity : AppCompatActivity() {
                     description = productDescription.ifEmpty { "Fresh organic produce" },
                     price = productPrice,
                     category = productCategory, // Added category
-                    imageRes = productImage.toString() // Convert to String as per your Product class
+                    imageRes = productImage.toString(),
+                    nutritionInfo = NutritionInfo(
+                        calories = "105 per banana",
+                        potassium = "358mg",
+                        vitaminB6 = "0.4mg",
+                        vitaminC = "8.7mg"
+                    ) // Convert to String as per your Product class
                 )
 
                 displayProductDetails(product)

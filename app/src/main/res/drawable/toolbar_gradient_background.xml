@@ -1,29 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-
-    <!-- Linear gradient definition -->
-    <gradient
-        android:type="linear"
-        android:angle="90"
-        android:startColor="@color/colorPrimary"
-        android:endColor="@color/colorPrimaryDark"
-        android:centerColor="@color/colorAccent"
-        android:centerX="0.5"
-        android:centerY="0.5" />
-
-    <!-- Rounded corners - only bottom corners rounded -->
-    <corners
-        android:topLeftRadius="0dp"
-        android:topRightRadius="0dp"
-        android:bottomLeftRadius="8dp"
-        android:bottomRightRadius="8dp" />
-
-    <!-- No padding -->
-    <padding
-        android:left="0dp"
-        android:top="0dp"
-        android:right="0dp"
-        android:bottom="0dp" />
-
-</shape>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:startColor="#FF0080FF"
+                android:endColor="#FF00BFFF"/>
+        </shape>
+    </item>
+</selector>

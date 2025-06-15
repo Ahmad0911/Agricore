@@ -2,44 +2,34 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- Search Action - Moved to top for better visual hierarchy -->
     <item
-        android:id="@+id/action_search"
-        android:title="Search"
-        android:icon="@android:drawable/ic_menu_search"
-        app:showAsAction="always|collapseActionView"
-        app:actionViewClass="androidx.appcompat.widget.SearchView" />
+        android:id="@+id/action_favorites"
+        android:title="Favorites"
+        android:icon="@drawable/ic_favourite_filled"
+        app:showAsAction="ifRoom" />
 
-    <!-- Filter Action with proper spacing -->
+    <item
+        android:id="@+id/action_cart"
+        android:title="Cart"
+        android:icon="@drawable/ic_shopping_cart"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_filter"
         android:title="Filter"
-        android:icon="@android:drawable/ic_menu_sort_by_size"
-        app:showAsAction="ifRoom" />
-
-    <!-- Logout Action -->
-    <item
-        android:id="@+id/menu_logout"
-        android:title="Logout"
-        android:icon="@drawable/ic_logout"
-        app:showAsAction="ifRoom" />
-
-    <!-- Refresh Action -->
-    <item
-        android:id="@+id/action_refresh"
-        android:title="Refresh"
-        android:icon="@android:drawable/ic_popup_sync"
-        app:showAsAction="never" />
-
-    <!-- View Settings -->
-    <item
-        android:id="@+id/action_view_grid"
-        android:title="Grid View"
-        app:showAsAction="never" />
+        android:icon="@drawable/ic_filter"
+        app:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/action_view_list"
-        android:title="List View"
-        app:showAsAction="never" />
+        android:id="@+id/action_sort"
+        android:title="Sort"
+        android:icon="@drawable/ic_farm_illustration"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/action_search"
+        android:title="Search"
+        android:icon="@drawable/ic_search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="ifRoom|collapseActionView"/>
 
 </menu>

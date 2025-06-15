@@ -95,9 +95,73 @@
         <string name="nutriscore">Nutri-Score</string>
         <string name="product_image">Product-Image</string>
         <string name="ingredients">Ingredients</string>
+        <string name="default_product_name">Product</string>
+        <string name="default_product_description">No description available</string>
+        <string name="default_price">$0.00</string>
+        <string name="default_price_unit">each</string>
+        <string name="default_rating">0.0</string>
+        <string name="products_title">Fresh Products</string>
+        <string name="all_categories">All Categories</string>
+        <string name="fruits">Fruits</string>
+        <string name="vegetables">Vegetables</string>
+        <string name="leafy_greens">Leafy Greens</string>
+        <string name="herbs">Herbs</string>
+        <string name="grains">Grains</string>
+        <string name="dairy">Dairy</string>
+        <string name="products">Products</string>
+
+
+        <!-- Badges -->
+        <string name="fresh">Fresh</string>
+        <string name="premium">Premium</string>
+        <string name="superfood">Superfood</string>
+        <string name="error_loading_products">Error loading products</string>
+        <string name="error_adding_to_cart">Error adding to cart</string>
+        <string name="error_loading_image">Error loading image</string>
+        <string name="no_products_available">No products available</string>
+        <string name="search_results_format">Found %1$d products for \'%2$s\'</string>
+        <string name="product_in_stock">In Stock</string>
+        <string name="product_out_of_stock">Out of Stock</string>
+        <string name="product_low_stock">Low Stock</string>
+        <string name="discount_percent_off">%1$d%% OFF</string>
+        <string name="original_price_format">$%1$.2f</string>
+        <string name="product_information_unavailable">Product information unavailable</string>
+        <string name="no_rating">No rating</string>
+
+        <!-- Stock status strings -->
+        <string name="stock_status_available">Available (%d)</string>
+        <string name="stock_status_last_few">Only %d left</string>
+        <string name="discount_format">%d%% OFF</string>
+
+
+        <!-- Badge labels -->
+        <string name="badge_organic">ORGANIC</string>
+        <string name="badge_fresh">FRESH</string>
+        <string name="badge_premium">PREMIUM</string>
+        <string name="badge_local">LOCAL</string>
+        <string name="badge_new">NEW</string>
+        <string name="badge_sale">SALE</string>
+
+        <!-- Accessibility content descriptions -->
+        <string name="content_desc_product_image">Product image</string>
+        <string name="content_desc_favorite_button">Favorite button</string>
+        <string name="content_desc_add_to_cart">Add to cart</string>
+        <string name="filter_button_desc">Filter products</string>
+        <string name="loading_products">Loading products...</string>
+        <string name="try_adjusting_search">Try adjusting your search or filters</string>
+        <string name="something_went_wrong">Something went wrong</string>
+        <string name="retry">Retry</string>
+        <string name="toggle_view_mode">Toggle view mode</string>
+
+
+
+
+        <!-- Price formatting -->
+
 
 
         <!-- Discount format -->
         <string name="discount_percent">%d%% OFF</string>
+        <string name="added_to_cart">AddedToCart</string>
 
 </resources>

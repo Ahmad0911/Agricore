@@ -1,254 +1,419 @@
 package com.example.agricore
 
+import android.content.Context
+import android.graphics.Paint
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import java.util.*
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 
 class ProductAdapter(
-    private val originalProducts: List<Product>,
-    private val onProductClick: (Product) -> Unit
-) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
+    private val context: Context,
+    private val onProductClick: (Product) -> Unit,
+    private val onFavoriteClick: (Product) -> Unit = {},
+    private val onAddToCartClick: (Product) -> Unit = {}
+) : ListAdapter<Product, ProductAdapter.ProductViewHolder>(ProductDiffCallback()) {
 
-    private var filteredProducts: MutableList<Product> = originalProducts.toMutableList()
-
-    inner class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        // Views from item_product.xml
-        val productImage: ImageView = itemView.findViewById(R.id.ivProductImage)
-        val productName: TextView = itemView.findViewById(R.id.tvProductName)
-        val productDescription: TextView = itemView.findViewById(R.id.tvProductDescription)
-        val productPrice: TextView = itemView.findViewById(R.id.tvProductPrice)
-        val priceUnit: TextView = itemView.findViewById(R.id.tvPriceUnit)
-        val rating: TextView = itemView.findViewById(R.id.tvRating)
-        val badge: TextView = itemView.findViewById(R.id.tvBadge)
-        val favoriteIcon: ImageView = itemView.findViewById(R.id.ivFavorite)
-        val addToCartButton: TextView = itemView.findViewById(R.id.btnAddToCart)
-
-        fun bind(product: Product) {
-            try {
-                // Set basic product info
-                productName.text = product.name
-                productDescription.text = product.description
-                productPrice.text = "$${String.format("%.2f", product.price)}"
-                priceUnit.text = product.priceUnit
-
-                // Set product image - FIXED: Use getDrawableResourceId to convert string to resource ID
-                val imageResId = ApiHelper.getDrawableResourceId(itemView.context, product.imageRes)
-                productImage.setImageResource(imageResId)
-
-                // Set rating from actual product data
-                rating.text = product.getDisplayRating()
-
-                // Set badge from product data
-                badge.text = product.badge.ifEmpty {
-                    when {
-                        product.name.contains("Organic", ignoreCase = true) -> "Organic"
-                        product.name.contains("Fresh", ignoreCase = true) -> "Fresh"
-                        product.price > 2.0 -> "Premium"
-                        else -> "Fresh"
-                    }
-                }
-
-                // Set favorite state from product data
-                favoriteIcon.setImageResource(
-                    if (product.isFavorite) android.R.drawable.btn_star_big_on
-                    else android.R.drawable.btn_star_big_off
-                )
-
-                var isFavorite = product.isFavorite
-                favoriteIcon.setOnClickListener {
-                    isFavorite = !isFavorite
-                    favoriteIcon.setImageResource(
-                        if (isFavorite) android.R.drawable.btn_star_big_on
-                        else android.R.drawable.btn_star_big_off
-                    )
-
-                    // Add animation
-                    favoriteIcon.animate()
-                        .scaleX(1.3f)
-                        .scaleY(1.3f)
-                        .setDuration(150)
-                        .withEndAction {
-                            favoriteIcon.animate()
-                                .scaleX(1f)
-                                .scaleY(1f)
-                                .setDuration(150)
-                                .start()
-                        }
-                        .start()
-
-                    val message = if (isFavorite) "Added to favorites ❤️" else "Removed from favorites"
-                    Toast.makeText(itemView.context, message, Toast.LENGTH_SHORT).show()
-                }
-
-                // Add entrance animation
-                itemView.alpha = 0f
-                itemView.animate()
-                    .alpha(1f)
-                    .setDuration(300)
-                    .setStartDelay((adapterPosition * 50).toLong())
-                    .start()
-
-                // Handle item click
-                itemView.setOnClickListener {
-                    animateClick(itemView) {
-                        onProductClick(product)
-                    }
-                }
-
-                // Handle add to cart button
-                addToCartButton.setOnClickListener {
-                    animateClick(it) {
-                        addToCart(product)
-                    }
-                }
-
-            } catch (e: Exception) {
-                // Handle binding errors gracefully
-                productName.text = "Product"
-                productDescription.text = "Fresh organic produce"
-                productPrice.text = "$0.00"
-                priceUnit.text = "per kg"
-                rating.text = "4.0"
-                badge.text = "Fresh"
-            }
-        }
-
-        private fun animateClick(view: View, action: () -> Unit) {
-            view.animate()
-                .scaleX(0.95f)
-                .scaleY(0.95f)
-                .setDuration(100)
-                .withEndAction {
-                    view.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .setDuration(100)
-                        .withEndAction {
-                            action()
-                        }
-                        .start()
-                }
-                .start()
-        }
-
-        private fun addToCart(product: Product) {
-            try {
-                val context = itemView.context
-
-                // Show success feedback
-                Toast.makeText(
-                    context,
-                    "${product.name} added to cart! 🛒",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                // Animate the add to cart button
-                addToCartButton.animate()
-                    .scaleX(1.2f)
-                    .scaleY(1.2f)
-                    .setDuration(150)
-                    .withEndAction {
-                        addToCartButton.animate()
-                            .scaleX(1f)
-                            .scaleY(1f)
-                            .setDuration(150)
-                            .start()
-                    }
-                    .start()
-
-            } catch (e: Exception) {
-                Toast.makeText(itemView.context, "Error adding to cart", Toast.LENGTH_SHORT).show()
-            }
-        }
+    companion object {
+        private const val VIEW_TYPE_PRODUCT = 0
+        private const val VIEW_TYPE_LOADING = 1
+        private const val VIEW_TYPE_EMPTY = 2
+        private const val TAG = "ProductAdapter"
     }
 
+    private var isLoading = false
+    private var showEmptyState = false
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
-        return try {
-            val itemView = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_product, parent, false)
-            ProductViewHolder(itemView)
-        } catch (e: Exception) {
-            throw RuntimeException("Error creating ViewHolder: ${e.message}", e)
+        return when (viewType) {
+            VIEW_TYPE_LOADING -> LoadingViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_loading, parent, false)
+            )
+            VIEW_TYPE_EMPTY -> EmptyViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_empty, parent, false)
+            )
+            else -> ProductItemViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_product, parent, false)
+            )
         }
     }
 
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
-        try {
-            if (position < filteredProducts.size) {
-                holder.bind(filteredProducts[position])
+        // Add bounds checking
+        if (position < 0) {
+            Log.w(TAG, "Invalid position: $position")
+            return
+        }
+
+        when (holder) {
+            is ProductItemViewHolder -> {
+                // Only bind if position is valid for products
+                if (position < currentList.size) {
+                    holder.bind(currentList[position])
+                } else {
+                    Log.w(TAG, "Position $position out of bounds for product list size ${currentList.size}")
+                }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+            is LoadingViewHolder -> holder.bind()
+            is EmptyViewHolder -> holder.bind()
         }
     }
 
-    override fun getItemCount(): Int = filteredProducts.size
+    override fun getItemViewType(position: Int): Int {
+        return when {
+            // Show loading only when list is empty and loading
+            isLoading && currentList.isEmpty() && position == 0 -> VIEW_TYPE_LOADING
+            // Show empty state only when list is empty and not loading
+            showEmptyState && currentList.isEmpty() && !isLoading && position == 0 -> VIEW_TYPE_EMPTY
+            // All other cases are products
+            position < currentList.size -> VIEW_TYPE_PRODUCT
+            else -> {
+                Log.w(TAG, "Invalid position $position for getItemViewType, currentList size: ${currentList.size}")
+                VIEW_TYPE_PRODUCT // Fallback
+            }
+        }
+    }
 
-    fun filter(query: String) {
-        try {
-            val oldSize = filteredProducts.size
-            filteredProducts.clear()
+    override fun getItemCount(): Int {
+        return when {
+            // Show 1 item for loading state when list is empty
+            isLoading && currentList.isEmpty() -> 1
+            // Show 1 item for empty state when list is empty and not loading
+            showEmptyState && currentList.isEmpty() && !isLoading -> 1
+            // Otherwise show actual product count
+            else -> currentList.size
+        }
+    }
 
-            if (query.isEmpty()) {
-                filteredProducts.addAll(originalProducts)
-            } else {
-                val searchQuery = query.lowercase(Locale.getDefault()).trim()
+    fun setLoading(loading: Boolean) {
+        val wasShowingSpecialState = (isLoading && currentList.isEmpty()) || (showEmptyState && currentList.isEmpty())
+        val willShowSpecialState = (loading && currentList.isEmpty()) || (showEmptyState && currentList.isEmpty())
 
-                filteredProducts.addAll(
-                    originalProducts.filter { product ->
-                        product.name.lowercase(Locale.getDefault()).contains(searchQuery) ||
-                                product.description.lowercase(Locale.getDefault()).contains(searchQuery) ||
-                                product.category.lowercase(Locale.getDefault()).contains(searchQuery) ||
-                                String.format("%.2f", product.price).contains(searchQuery)
+        isLoading = loading
+        if (loading) {
+            showEmptyState = false
+        }
+
+        // Only notify if the special state visibility changed
+        if (wasShowingSpecialState != willShowSpecialState) {
+            if (currentList.isEmpty()) {
+                if (wasShowingSpecialState && !willShowSpecialState) {
+                    notifyItemRemoved(0)
+                } else if (!wasShowingSpecialState && willShowSpecialState) {
+                    notifyItemInserted(0)
+                } else {
+                    notifyItemChanged(0)
+                }
+            }
+        } else if (currentList.isEmpty() && (wasShowingSpecialState || willShowSpecialState)) {
+            notifyItemChanged(0)
+        }
+    }
+
+    fun setEmptyState(empty: Boolean) {
+        val wasShowingSpecialState = (isLoading && currentList.isEmpty()) || (showEmptyState && currentList.isEmpty())
+
+        showEmptyState = empty
+        if (empty) {
+            isLoading = false
+        }
+
+        val willShowSpecialState = (isLoading && currentList.isEmpty()) || (showEmptyState && currentList.isEmpty())
+
+        // Only notify if the special state visibility changed
+        if (wasShowingSpecialState != willShowSpecialState) {
+            if (currentList.isEmpty()) {
+                if (wasShowingSpecialState && !willShowSpecialState) {
+                    notifyItemRemoved(0)
+                } else if (!wasShowingSpecialState && willShowSpecialState) {
+                    notifyItemInserted(0)
+                } else {
+                    notifyItemChanged(0)
+                }
+            }
+        } else if (currentList.isEmpty() && (wasShowingSpecialState || willShowSpecialState)) {
+            notifyItemChanged(0)
+        }
+    }
+
+    fun updateProductFavoriteStatus(productId: Int, isFavorite: Boolean) {
+        val index = currentList.indexOfFirst { it.id == productId }
+        if (index != -1 && index < currentList.size) {
+            val updatedList = currentList.toMutableList()
+            updatedList[index] = updatedList[index].copy(isFavorite = isFavorite)
+            submitList(updatedList)
+        }
+    }
+
+    fun updateProductStock(productId: Int, newStock: Int) {
+        val index = currentList.indexOfFirst { it.id == productId }
+        if (index != -1 && index < currentList.size) {
+            val updatedList = currentList.toMutableList()
+            updatedList[index] = updatedList[index].copy(stockQuantity = newStock)
+            submitList(updatedList)
+        }
+    }
+
+    override fun submitList(list: List<Product>?) {
+        val newSize = list?.size ?: 0
+        val oldSize = currentList.size
+
+        // Your state management logic
+        if (newSize > 0) {
+            isLoading = false
+            showEmptyState = false
+        } else if (!isLoading) {
+            showEmptyState = true
+        }
+
+        super.submitList(list)
+    }
+
+    abstract class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+    inner class ProductItemViewHolder(itemView: View) : ProductViewHolder(itemView) {
+        private val productImage: ImageView = itemView.findViewById(R.id.iv_product_image)
+        private val productName: TextView = itemView.findViewById(R.id.tv_product_name)
+        private val productDescription: TextView = itemView.findViewById(R.id.tv_product_description)
+        private val productPrice: TextView = itemView.findViewById(R.id.tv_product_price)
+        private val originalPrice: TextView? = itemView.findViewById(R.id.tv_original_price)
+        private val discountBadge: TextView? = itemView.findViewById(R.id.tv_discount_badge)
+        private val productRating: TextView = itemView.findViewById(R.id.tv_product_rating)
+        private val productBadge: TextView? = itemView.findViewById(R.id.tv_product_badge)
+        private val stockStatus: TextView? = itemView.findViewById(R.id.tv_stock_status)
+        private val favoriteButton: ImageView? = itemView.findViewById(R.id.iv_favorite)
+        private val addToCartButton: View? = itemView.findViewById(R.id.btn_add_to_cart)
+
+        fun bind(product: Product) {
+            try {
+                // Basic info
+                productName.text = product.name
+                productDescription.text = product.description
+                productRating.text = product.getDisplayRating()
+
+                // Image loading - Use ApiHelper centralized method
+                loadProductImage(product)
+
+                // Pricing
+                setupPricing(product)
+
+                // Badges and status
+                setupBadge(product)
+                setupStockStatus(product)
+                setupFavoriteButton(product)
+                setupClickListeners(product)
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error binding product ${product.id}", e)
+                // Fallback to basic display
+                productName.text = product.name
+                productPrice.text = "$${String.format("%.2f", product.price)}"
+                productImage.setImageResource(android.R.drawable.ic_menu_gallery)
+            }
+        }
+
+        private fun loadProductImage(product: Product) {
+            try {
+                // Use ApiHelper's centralized image loading
+                val drawableId = ApiHelper.getDrawableResourceId(context, product.imageRes)
+                if (drawableId != 0) {
+                    Glide.with(context)
+                        .load(drawableId)
+                        .apply(createGlideOptions())
+                        .into(productImage)
+                } else {
+                    // Fallback to default image
+                    productImage.setImageResource(android.R.drawable.ic_menu_gallery)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading image for product ${product.id}", e)
+                productImage.setImageResource(android.R.drawable.ic_menu_gallery)
+            }
+        }
+
+        private fun createGlideOptions(): RequestOptions {
+            return RequestOptions()
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .error(android.R.drawable.ic_menu_gallery)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+        }
+
+        private fun setupPricing(product: Product) {
+            try {
+                if (product.discount > 0) {
+                    // Show discounted price
+                    productPrice.text = "$${String.format("%.2f", product.getDiscountedPrice())}"
+
+                    // Show original price with strikethrough
+                    originalPrice?.apply {
+                        visibility = View.VISIBLE
+                        text = "$${String.format("%.2f", product.price)}"
+                        paintFlags = paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                     }
+
+                    // Show discount badge
+                    discountBadge?.apply {
+                        visibility = View.VISIBLE
+                        text = "${product.discount}% OFF"
+                    }
+                } else {
+                    // Regular price
+                    productPrice.text = product.getDisplayPrice()
+                    originalPrice?.visibility = View.GONE
+                    discountBadge?.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error setting up pricing for product ${product.id}", e)
+                productPrice.text = "$${String.format("%.2f", product.price)}"
+            }
+        }
+
+        private fun setupBadge(product: Product) {
+            try {
+                productBadge?.let { badge ->
+                    if (product.badge.isNotEmpty()) {
+                        badge.visibility = View.VISIBLE
+                        badge.text = product.badge
+
+                        // Set badge styling based on type
+                        val backgroundColor = when (product.badge.lowercase()) {
+                            "organic" -> ContextCompat.getColor(context, android.R.color.holo_green_light)
+                            "fresh" -> ContextCompat.getColor(context, android.R.color.holo_blue_light)
+                            "premium" -> ContextCompat.getColor(context, android.R.color.holo_orange_light)
+                            else -> ContextCompat.getColor(context, android.R.color.darker_gray)
+                        }
+
+                        badge.setBackgroundColor(backgroundColor)
+                        badge.setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                    } else {
+                        badge.visibility = View.GONE
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error setting up badge for product ${product.id}", e)
+                productBadge?.visibility = View.GONE
+            }
+        }
+
+        private fun setupStockStatus(product: Product) {
+            try {
+                stockStatus?.let { status ->
+                    status.text = product.getStockStatus()
+                    status.visibility = View.VISIBLE
+
+                    val textColor = when {
+                        !product.inStock || product.stockQuantity <= 0 ->
+                            ContextCompat.getColor(context, android.R.color.holo_red_dark)
+                        product.isLowStock() ->
+                            ContextCompat.getColor(context, android.R.color.holo_orange_dark)
+                        else ->
+                            ContextCompat.getColor(context, android.R.color.holo_green_dark)
+                    }
+
+                    status.setTextColor(textColor)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error setting up stock status for product ${product.id}", e)
+                stockStatus?.visibility = View.GONE
+            }
+        }
+
+        private fun setupFavoriteButton(product: Product) {
+            try {
+                favoriteButton?.let { button ->
+                    val iconRes = if (product.isFavorite) {
+                        android.R.drawable.btn_star_big_on
+                    } else {
+                        android.R.drawable.btn_star_big_off
+                    }
+
+                    val tintColor = if (product.isFavorite) {
+                        ContextCompat.getColor(context, android.R.color.holo_red_light)
+                    } else {
+                        ContextCompat.getColor(context, android.R.color.darker_gray)
+                    }
+
+                    button.setImageResource(iconRes)
+                    button.setColorFilter(tintColor)
+                    button.setOnClickListener { onFavoriteClick(product) }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error setting up favorite button for product ${product.id}", e)
+            }
+        }
+
+        private fun setupClickListeners(product: Product) {
+            try {
+                itemView.setOnClickListener { onProductClick(product) }
+
+                addToCartButton?.let { button ->
+                    val isAvailable = product.inStock && product.stockQuantity > 0
+                    button.isEnabled = isAvailable
+                    button.alpha = if (isAvailable) 1f else 0.5f
+                    button.setOnClickListener {
+                        if (isAvailable) {
+                            onAddToCartClick(product)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error setting up click listeners for product ${product.id}", e)
+            }
+        }
+    }
+
+    inner class LoadingViewHolder(itemView: View) : ProductViewHolder(itemView) {
+        fun bind() {
+            // Loading state UI handled by layout
+            try {
+                itemView.findViewById<TextView>(R.id.tv_loading_message)?.text = "Loading products..."
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in loading view holder", e)
+            }
+        }
+    }
+
+    inner class EmptyViewHolder(itemView: View) : ProductViewHolder(itemView) {
+        fun bind() {
+            try {
+                itemView.findViewById<TextView>(R.id.tv_empty_message)?.text = "No products found"
+                itemView.findViewById<ImageView>(R.id.iv_empty_image)?.setImageResource(
+                    android.R.drawable.ic_menu_search
                 )
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in empty view holder", e)
             }
-
-            // Efficient notification
-            if (oldSize == filteredProducts.size) {
-                notifyItemRangeChanged(0, filteredProducts.size)
-            } else {
-                notifyDataSetChanged()
-            }
-
-        } catch (e: Exception) {
-            filteredProducts.clear()
-            filteredProducts.addAll(originalProducts)
-            notifyDataSetChanged()
         }
     }
+}
 
-    fun updateProducts(newProducts: List<Product>) {
-        try {
-            val oldSize = filteredProducts.size
-            filteredProducts.clear()
-            filteredProducts.addAll(newProducts)
-
-            if (newProducts.size > oldSize) {
-                notifyItemRangeInserted(oldSize, newProducts.size - oldSize)
-            } else if (newProducts.size < oldSize) {
-                notifyItemRangeRemoved(newProducts.size, oldSize - newProducts.size)
-            } else {
-                notifyItemRangeChanged(0, newProducts.size)
-            }
-
-        } catch (e: Exception) {
-            notifyDataSetChanged()
-        }
+class ProductDiffCallback : DiffUtil.ItemCallback<Product>() {
+    override fun areItemsTheSame(oldItem: Product, newItem: Product): Boolean {
+        return oldItem.id == newItem.id
     }
 
-    fun getFilteredCount(): Int = filteredProducts.size
+    override fun areContentsTheSame(oldItem: Product, newItem: Product): Boolean {
+        return oldItem == newItem
+    }
 
-    fun getFilteredProducts(): List<Product> = filteredProducts.toList()
-
-    fun refreshWithAnimation() {
-        for (i in filteredProducts.indices) {
-            notifyItemChanged(i)
+    override fun getChangePayload(oldItem: Product, newItem: Product): Any? {
+        return when {
+            oldItem.isFavorite != newItem.isFavorite -> "favorite"
+            oldItem.stockQuantity != newItem.stockQuantity -> "stock"
+            oldItem.price != newItem.price || oldItem.discount != newItem.discount -> "price"
+            else -> null
         }
     }
 }

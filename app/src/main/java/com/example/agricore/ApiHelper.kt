@@ -2,16 +2,16 @@ package com.example.agricore
 
 import android.content.Context
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
-import android.util.Log
 import kotlinx.coroutines.*
 import java.io.IOException
+import kotlinx.parcelize.Parcelize
+import java.util.Locale
 
-// Data Classes
 @Parcelize
-data class Products(
+data class Product(
     val id: Int,
     val name: String,
     val description: String,
@@ -19,6 +19,7 @@ data class Products(
     val priceUnit: String = "per kg",
     val category: String,
     val subcategory: String = "",
+    @Deprecated("Use imageRes for local drawables")
     val imageUrl: String = "",
     val imageRes: String = "ic_menu_gallery",
     val rating: Double = 0.0,
@@ -27,13 +28,39 @@ data class Products(
     val inStock: Boolean = true,
     val stockQuantity: Int = 0,
     val discount: Int = 0,
-    val isFavorite: Boolean = false,
+    var isFavorite: Boolean = false,
     val nutritionInfo: NutritionInfo = NutritionInfo("0 per 100g"),
     val tags: List<String> = emptyList()
-) : Parcelable
+) : Parcelable {
+
+    fun getDisplayRating(): String {
+        return if (rating > 0) "%.1f ★ (%d)".format(Locale.getDefault(), rating, reviewCount) else "No rating"
+    }
+
+    fun getDiscountedPrice(): Double = if (discount > 0) price * (100 - discount) / 100 else price
+
+    fun getDisplayPrice(): String {
+        return if (discount > 0) {
+            "$${"%.2f".format(Locale.getDefault(), getDiscountedPrice())} (${discount}% off)"
+        } else {
+            "$${"%.2f".format(Locale.getDefault(), price)} $priceUnit"
+        }
+    }
+
+    fun isLowStock(): Boolean = inStock && stockQuantity > 0 && stockQuantity <= 10
+
+    fun isNew(): Boolean = reviewCount < 5
+
+    fun getStockStatus(): String = when {
+        !inStock -> "Out of stock"
+        stockQuantity <= 0 -> "Out of stock"
+        isLowStock() -> "Low stock ($stockQuantity left)"
+        else -> "In stock"
+    }
+}
 
 @Parcelize
-data class NutritionInfos(
+data class NutritionInfo(
     val calories: String,
     @SerializedName("vitamin_c") val vitaminC: String? = null,
     val fiber: String? = null,
@@ -47,7 +74,25 @@ data class NutritionInfos(
     @SerializedName("vitamin_b6") val vitaminB6: String? = null,
     val antioxidants: String? = null,
     @SerializedName("citric_acid") val citricAcid: String? = null
-) : Parcelable
+) : Parcelable {
+    fun getAvailableNutritionFacts(): Map<String, String> {
+        return listOfNotNull(
+            "Calories" to calories,
+            "Vitamin C" to vitaminC,
+            "Fiber" to fiber,
+            "Vitamin A" to vitaminA,
+            "Potassium" to potassium,
+            "Iron" to iron,
+            "Vitamin K" to vitaminK,
+            "Folate" to folate,
+            "Water Content" to waterContent,
+            "Quercetin" to quercetin,
+            "Vitamin B6" to vitaminB6,
+            "Antioxidants" to antioxidants,
+            "Citric Acid" to citricAcid
+        ).filter { it.second != null }.associate { it.first to it.second!! }
+    }
+}
 
 @Parcelize
 data class Category(
@@ -68,10 +113,21 @@ data class PriceRange(
 data class FilterOptions(
     @SerializedName("price_ranges") val priceRanges: List<PriceRange>,
     val badges: List<String>,
-    val ratings: List<Double>
+    val ratings: List<Double>,
+    val categories: List<Category>
 ) : Parcelable
 
-// API Response wrapper
+sealed class ApiResult<out T> {
+    data class Success<T>(val data: T) : ApiResult<T>()
+    data class Error(val exception: Throwable, val message: String) : ApiResult<Nothing>()
+    object Loading : ApiResult<Nothing>()
+}
+
+interface ApiCallback<T> {
+    fun onSuccess(data: T)
+    fun onError(error: String)
+}
+
 data class ApiResponse(
     val status: String,
     val message: String,
@@ -84,36 +140,81 @@ data class ProductsData(
     val filters: FilterOptions
 )
 
-// Result wrapper for better error handling
-sealed class ApiResult<out T> {
-    data class Success<T>(val data: T) : ApiResult<T>()
-    data class Error(val exception: Throwable, val message: String) : ApiResult<Nothing>()
-    object Loading : ApiResult<Nothing>()
-}
-
-// Callback interfaces for async operations
-interface ApiCallback<T> {
-    fun onSuccess(data: T)
-    fun onError(error: String)
-}
-
 class ApiHelper(private val context: Context) {
 
     companion object {
         private const val TAG = "ApiHelper"
         private const val JSON_FILE_NAME = "products_api.json"
+        private const val DEFAULT_FALLBACK_IMAGE = "ic_menu_gallery"
 
-        // Utility function to get drawable resource ID from string name
+        private val imageMappings = mapOf(
+            "tomato" to "ic_tomatoes",
+            "carrot" to "ic_carrot",
+            "apple" to "ic_apple",
+            "banana" to "ic_banana",
+            "potato" to "ic_potato",
+            "spinach" to "ic_spinach",
+            "lettuce" to "ic_lettuce",
+            "pepper" to "ic_bell_pepper",
+            "cucumber" to "ic_cucumber",
+            "broccoli" to "ic_broccoli",
+            "corn" to "ic_corn",
+            "onion" to "ic_onion",
+            "strawberry" to "ic_strawberry",
+            "lemon" to "ic_lemon"
+        )
+
+        /**
+         * Safely gets drawable resource ID with fallback
+         */
         fun getDrawableResourceId(context: Context, drawableName: String): Int {
             return try {
-                val resourceId = context.resources.getIdentifier(
-                    drawableName, "drawable", context.packageName
+                Log.d(TAG, "Looking for drawable: $drawableName")
+
+                val cleanName = drawableName.substringBeforeLast(".")
+
+                // Try multiple variations
+                val namesToTry = listOf(
+                    drawableName,           // Original name
+                    cleanName,              // Without extension
+                    "ic_$cleanName",        // With ic_ prefix
+                    "img_$cleanName"        // With img_ prefix
                 )
-                if (resourceId != 0) resourceId else android.R.drawable.ic_menu_gallery
+
+                var resourceId = 0
+                for (name in namesToTry) {
+                    resourceId = context.resources.getIdentifier(
+                        name,
+                        "drawable",
+                        context.packageName
+                    )
+                    if (resourceId != 0) {
+                        Log.d(TAG, "Found drawable $name with ID: $resourceId")
+                        break
+                    }
+                }
+
+                // Final fallback to system drawable
+                if (resourceId == 0) {
+                    Log.w(TAG, "No drawable found for $drawableName, using fallback")
+                    android.R.drawable.ic_menu_gallery
+                } else {
+                    resourceId
+                }
             } catch (e: Exception) {
-                Log.w(TAG, "Could not find drawable: $drawableName", e)
+                Log.e(TAG, "Error getting drawable ID for $drawableName", e)
                 android.R.drawable.ic_menu_gallery
             }
+        }
+
+        /**
+         * Gets the appropriate image resource name for a product
+         */
+        fun getImageResourceForProduct(productName: String, category: String): String {
+            val lowerName = productName.lowercase(Locale.getDefault())
+            return imageMappings.entries.firstOrNull { (key, _) ->
+                lowerName.contains(key)
+            }?.value ?: DEFAULT_FALLBACK_IMAGE
         }
     }
 
@@ -121,615 +222,162 @@ class ApiHelper(private val context: Context) {
     private var cachedApiResponse: ApiResponse? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    // Sample JSON data with comprehensive product catalog
-    private val sampleJsonData = """
-    {
-      "status": "success",
-      "message": "Products retrieved successfully",
-      "data": {
-        "products": [
-          {
-            "id": 1,
-            "name": "Organic Tomatoes",
-            "description": "Fresh organic produce from local farms. Rich in vitamins and perfect for cooking.",
-            "price": 2.99,
-            "priceUnit": "per kg",
-            "category": "Vegetables",
-            "subcategory": "Organic",
-            "imageUrl": "https://images.unsplash.com/photo-1546094683-6de8d7ce1c0c?w=400&h=300&fit=crop",
-            "imageRes": "ic_tomato",
-            "rating": 4.8,
-            "reviewCount": 24,
-            "badge": "Organic",
-            "inStock": true,
-            "stockQuantity": 150,
-            "discount": 0,
-            "isFavorite": false,
-            "nutritionInfo": {
-              "calories": "18 per 100g",
-              "vitamin_c": "High",
-              "fiber": "Medium"
-            },
-            "tags": ["organic", "fresh", "local", "vitamin-rich"]
-          },
-          {
-            "id": 2,
-            "name": "Sweet Carrots",
-            "description": "Sweet farm-fresh carrots, perfect for snacking and cooking. High in beta-carotene.",
-            "price": 1.49,
-            "priceUnit": "per kg",
-            "category": "Vegetables",
-            "subcategory": "Root Vegetables",
-            "imageUrl": "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop",
-            "imageRes": "ic_carrot",
-            "rating": 4.6,
-            "reviewCount": 18,
-            "badge": "Fresh",
-            "inStock": true,
-            "stockQuantity": 200,
-            "discount": 10,
-            "isFavorite": false,
-            "nutritionInfo": {
-              "calories": "41 per 100g",
-              "vitamin_a": "Very High",
-              "fiber": "High"
-            },
-            "tags": ["sweet", "fresh", "beta-carotene", "crunchy"]
-          },
-          {
-            "id": 3,
-            "name": "Red Apples",
-            "description": "Juicy red apples, perfect for snacking. Crisp texture with natural sweetness.",
-            "price": 3.99,
-            "priceUnit": "per kg",
-            "category": "Fruits",
-            "subcategory": "Tree Fruits",
-            "imageUrl": "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=400&h=300&fit=crop",
-            "imageRes": "ic_apple",
-            "rating": 4.9,
-            "reviewCount": 45,
-            "badge": "Premium",
-            "inStock": true,
-            "stockQuantity": 120,
-            "discount": 0,
-            "isFavorite": true,
-            "nutritionInfo": {
-              "calories": "52 per 100g",
-              "vitamin_c": "Medium",
-              "fiber": "High"
-            },
-            "tags": ["juicy", "sweet", "crisp", "premium"]
-          },
-          {
-            "id": 4,
-            "name": "Russet Potatoes",
-            "description": "Organic russet potatoes, great for cooking, baking, and making fries.",
-            "price": 1.29,
-            "priceUnit": "per kg",
-            "category": "Vegetables",
-            "subcategory": "Root Vegetables",
-            "imageUrl": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop",
-            "imageRes": "ic_potato",
-            "rating": 4.5,
-            "reviewCount": 32,
-            "badge": "Organic",
-            "inStock": true,
-            "stockQuantity": 300,
-            "discount": 5,
-            "isFavorite": false,
-            "nutritionInfo": {
-              "calories": "77 per 100g",
-              "potassium": "High",
-              "vitamin_c": "Medium"
-            },
-            "tags": ["organic", "versatile", "cooking", "baking"]
-          },
-          {
-            "id": 5,
-            "name": "Baby Spinach",
-            "description": "Fresh baby spinach leaves, perfect for salads and smoothies. Packed with iron.",
-            "price": 2.49,
-            "priceUnit": "per bundle",
-            "category": "Vegetables",
-            "subcategory": "Leafy Greens",
-            "imageUrl": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
-            "imageRes": "ic_spinach",
-            "rating": 4.7,
-            "reviewCount": 28,
-            "badge": "Fresh",
-            "inStock": true,
-            "stockQuantity": 80,
-            "discount": 0,
-            "isFavorite": false,
-            "nutritionInfo": {
-              "calories": "23 per 100g",
-              "iron": "Very High",
-              "vitamin_k": "Very High"
-            },
-            "tags": ["baby", "fresh", "iron-rich", "salad"]
-          },
-          {
-            "id": 13,
-            "name": "Golden Bananas",
-            "description": "Ripe golden bananas, perfect for snacking, smoothies, and baking.",
-            "price": 1.89,
-            "priceUnit": "per bunch",
-            "category": "Fruits",
-            "subcategory": "Tropical Fruits",
-            "imageUrl": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=300&fit=crop",
-            "imageRes": "ic_banana",
-            "rating": 4.8,
-            "reviewCount": 67,
-            "badge": "Fresh",
-            "inStock": true,
-            "stockQuantity": 95,
-            "discount": 0,
-            "isFavorite": true,
-            "nutritionInfo": {
-              "calories": "89 per 100g",
-              "potassium": "Very High",
-              "vitamin_b6": "High"
-            },
-            "tags": ["golden", "ripe", "potassium", "energy"]
-          },
-          {
-            "id": 14,
-            "name": "Organic Strawberries",
-            "description": "Sweet organic strawberries, perfect for desserts, smoothies, and snacking.",
-            "price": 4.99,
-            "priceUnit": "per basket",
-            "category": "Fruits",
-            "subcategory": "Berries",
-            "imageUrl": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=300&fit=crop",
-            "imageRes": "ic_strawberry",
-            "rating": 4.9,
-            "reviewCount": 89,
-            "badge": "Organic",
-            "inStock": true,
-            "stockQuantity": 45,
-            "discount": 20,
-            "isFavorite": true,
-            "nutritionInfo": {
-              "calories": "32 per 100g",
-              "vitamin_c": "Very High",
-              "antioxidants": "Very High"
-            },
-            "tags": ["organic", "sweet", "antioxidants", "premium"]
-          }
-        ],
-        "categories": [
-          {
-            "id": 1,
-            "name": "All",
-            "count": 7,
-            "isSelected": true
-          },
-          {
-            "id": 2,
-            "name": "Vegetables",
-            "count": 4,
-            "isSelected": false
-          },
-          {
-            "id": 3,
-            "name": "Fruits",
-            "count": 3,
-            "isSelected": false
-          },
-          {
-            "id": 4,
-            "name": "Organic",
-            "count": 3,
-            "isSelected": false
-          }
-        ],
-        "filters": {
-          "price_ranges": [
-            {"min": 0, "max": 1, "label": "Under $1"},
-            {"min": 1, "max": 2, "label": "$1 - $2"},
-            {"min": 2, "max": 3, "label": "$2 - $3"},
-            {"min": 3, "max": 5, "label": "$3 - $5"},
-            {"min": 5, "max": 999, "label": "Above $5"}
-          ],
-          "badges": ["Fresh", "Organic", "Premium"],
-          "ratings": [4.0, 4.5, 4.8]
+    fun getProducts(): List<Product> = try {
+        val response = loadProductsFromJson()
+        Log.d(TAG, "Loaded ${response.data.products.size} products from JSON")
+
+        response.data.products.map { product ->
+            val finalImageRes = when {
+                product.imageRes.isNotBlank() && product.imageRes != DEFAULT_FALLBACK_IMAGE -> {
+                    product.imageRes.substringBeforeLast(".") // Remove extension for resource lookup
+                }
+                else -> getImageResourceForProduct(product.name, product.category)
+            }
+
+            product.copy(
+                imageRes = finalImageRes,
+                imageUrl = "" // Clear URL since we're using local drawables
+            )
         }
-      }
+    } catch (e: Exception) {
+        Log.e(TAG, "Error loading products", e)
+        // Return some fallback data for testing
+        createFallbackProducts()
     }
-    """.trimIndent()
 
-    // SYNCHRONOUS METHODS (for current implementation compatibility)
+    fun getCategories(): List<Category> = try {
+        val response = loadProductsFromJson()
+        Log.d(TAG, "Loaded ${response.data.categories.size} categories from JSON")
+        response.data.categories
+    } catch (e: Exception) {
+        Log.e(TAG, "Error loading categories", e)
+        createFallbackCategories()
+    }
 
-    /**
-     * Load API data synchronously with comprehensive error handling
-     */
-    private fun loadApiData(): ApiResponse? {
+    fun getFilterOptions(): FilterOptions = try {
+        loadProductsFromJson().data.filters
+    } catch (e: Exception) {
+        Log.e(TAG, "Error loading filters", e)
+        FilterOptions(emptyList(), emptyList(), emptyList(), emptyList())
+    }
+
+    fun searchProducts(query: String): List<Product> {
+        if (query.isBlank()) return getProducts()
+
         return try {
-            if (cachedApiResponse == null) {
-                Log.d(TAG, "Loading API data...")
+            val lowerQuery = query.lowercase(Locale.getDefault())
+            getProducts().filter { product ->
+                product.name.contains(lowerQuery, ignoreCase = true) ||
+                        product.description.contains(lowerQuery, ignoreCase = true) ||
+                        product.category.contains(lowerQuery, ignoreCase = true) ||
+                        product.tags.any { it.contains(lowerQuery, ignoreCase = true) }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error searching products", e)
+            emptyList()
+        }
+    }
 
-                // Try to load from assets first
-                val jsonString = loadJsonFromAssets(JSON_FILE_NAME)
-                    ?: run {
-                        Log.w(TAG, "Assets file not found, using sample data")
-                        sampleJsonData
-                    }
+    fun getProductsByCategory(categoryId: Int): List<Product> = try {
+        getCategories().find { it.id == categoryId }?.let { category ->
+            getProducts().filter { it.category.equals(category.name, ignoreCase = true) }
+        } ?: emptyList()
+    } catch (e: Exception) {
+        Log.e(TAG, "Error loading products by category", e)
+        emptyList()
+    }
 
-                cachedApiResponse = gson.fromJson(jsonString, ApiResponse::class.java)
+    fun getProductById(productId: Int): Product? = try {
+        getProducts().firstOrNull { it.id == productId }
+    } catch (e: Exception) {
+        Log.e(TAG, "Error loading product by ID", e)
+        null
+    }
 
-                // Validate loaded data
-                cachedApiResponse?.let { response ->
-                    if (response.status != "success") {
-                        Log.w(TAG, "API response indicates error: ${response.message}")
-                        return getFallbackApiResponse()
-                    }
-                    if (response.data.products.isEmpty()) {
-                        Log.w(TAG, "No products found in API response")
-                        return getFallbackApiResponse()
-                    }
-                    Log.d(TAG, "Successfully loaded ${response.data.products.size} products")
-                } ?: run {
-                    Log.e(TAG, "Failed to parse API data")
-                    return getFallbackApiResponse()
+    fun loadProductsAsync(callback: ApiCallback<ApiResponse>) {
+        coroutineScope.launch {
+            try {
+                val result = loadProductsFromJson()
+                withContext(Dispatchers.Main) {
+                    callback.onSuccess(result)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    callback.onError("Failed to load products: ${e.localizedMessage ?: "Unknown error"}")
                 }
             }
-            cachedApiResponse
-        } catch (e: Exception) {
-            Log.e(TAG, "Error loading API data", e)
-            getFallbackApiResponse()
         }
     }
 
-    /**
-     * Load JSON from assets with null safety
-     */
-    private fun loadJsonFromAssets(fileName: String): String? {
-        return try {
-            context.assets.open(fileName).use { inputStream ->
+    private fun loadProductsFromJson(): ApiResponse {
+        return cachedApiResponse ?: try {
+            Log.d(TAG, "Attempting to load products from $JSON_FILE_NAME")
+
+            context.assets.open(JSON_FILE_NAME).use { inputStream ->
                 inputStream.bufferedReader().use { reader ->
-                    reader.readText()
+                    val jsonContent = reader.readText()
+                    Log.d(TAG, "JSON file content length: ${jsonContent.length}")
+
+                    gson.fromJson(jsonContent, ApiResponse::class.java).also {
+                        cachedApiResponse = it
+                        Log.d(TAG, "Successfully loaded ${it.data.products.size} products")
+                    }
                 }
             }
         } catch (e: IOException) {
-            Log.w(TAG, "Could not read JSON file: $fileName", e)
-            null
+            Log.e(TAG, "JSON file not found or cannot be read", e)
+            createFallbackResponse()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing JSON", e)
+            createFallbackResponse()
         }
     }
 
-    /**
-     * Get fallback API response with default data
-     */
-    private fun getFallbackApiResponse(): ApiResponse {
+    fun clearCache() {
+        cachedApiResponse = null
+    }
+
+    fun cleanup() {
+        coroutineScope.cancel()
+    }
+
+    private fun createFallbackResponse(): ApiResponse {
+        Log.w(TAG, "Creating fallback response with sample data")
         return ApiResponse(
-            status = "success",
-            message = "Using fallback data",
+            status = "fallback",
+            message = "Using fallback data - JSON file not found",
             data = ProductsData(
-                products = getFallbackProducts(),
-                categories = getDefaultCategories(),
-                filters = getDefaultFilterOptions()
+                products = createFallbackProducts(),
+                categories = createFallbackCategories(),
+                filters = FilterOptions(emptyList(), emptyList(), emptyList(), emptyList())
             )
         )
     }
 
-    /**
-     * Get all products with comprehensive error handling
-     */
-    fun getProducts(): List<Product> {
-        return try {
-            val response = loadApiData()
-            response?.data?.products ?: getFallbackProducts()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting products", e)
-            getFallbackProducts()
-        }
-    }
-
-    /**
-     * Get all categories
-     */
-    fun getCategories(): List<Category> {
-        return try {
-            val response = loadApiData()
-            response?.data?.categories ?: getDefaultCategories()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting categories", e)
-            getDefaultCategories()
-        }
-    }
-
-    /**
-     * Get filter options
-     */
-    fun getFilterOptions(): FilterOptions? {
-        return try {
-            val response = loadApiData()
-            response?.data?.filters ?: getDefaultFilterOptions()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting filter options", e)
-            getDefaultFilterOptions()
-        }
-    }
-
-    // FILTERING AND SEARCH METHODS
-
-    /**
-     * Get products by category with case-insensitive matching
-     */
-    fun getProductsByCategory(categoryName: String): List<Product> {
-        return try {
-            val allProducts = getProducts()
-            when {
-                categoryName.equals("All", ignoreCase = true) -> allProducts
-                categoryName.equals("Organic", ignoreCase = true) ->
-                    allProducts.filter { it.badge.equals("Organic", ignoreCase = true) }
-                else -> allProducts.filter { it.category.equals(categoryName, ignoreCase = true) }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting products by category: $categoryName", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Get products by badge
-     */
-    fun getProductsByBadge(badge: String): List<Product> {
-        return try {
-            getProducts().filter { it.badge.equals(badge, ignoreCase = true) }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting products by badge: $badge", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Get products by price range
-     */
-    fun getProductsByPriceRange(minPrice: Double, maxPrice: Double): List<Product> {
-        return try {
-            getProducts().filter { product ->
-                product.price >= minPrice &&
-                        (maxPrice >= 999 || product.price <= maxPrice) // Handle "Above $X" case
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting products by price range: $minPrice-$maxPrice", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Get products by minimum rating
-     */
-    fun getProductsByMinRating(minRating: Double): List<Product> {
-        return try {
-            getProducts().filter { it.rating >= minRating }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting products by min rating: $minRating", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Get favorite products
-     */
-    fun getFavoriteProducts(): List<Product> {
-        return try {
-            getProducts().filter { it.isFavorite }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting favorite products", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Get products in stock
-     */
-    fun getInStockProducts(): List<Product> {
-        return try {
-            getProducts().filter { it.inStock && it.stockQuantity > 0 }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting in-stock products", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Get products with discount
-     */
-    fun getDiscountedProducts(): List<Product> {
-        return try {
-            getProducts().filter { it.discount > 0 }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting discounted products", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Enhanced search with weighted results
-     */
-    fun searchProducts(query: String): List<Product> {
-        return try {
-            if (query.isBlank()) return getProducts()
-
-            val allProducts = getProducts()
-            val searchQuery = query.lowercase().trim()
-
-            // Weighted search results
-            val exactMatches = mutableListOf<Product>()
-            val partialMatches = mutableListOf<Product>()
-            val tagMatches = mutableListOf<Product>()
-
-            allProducts.forEach { product ->
-                val productName = product.name.lowercase()
-                val productDesc = product.description.lowercase()
-                val productCategory = product.category.lowercase()
-
-                when {
-                    productName == searchQuery -> exactMatches.add(product)
-                    productName.contains(searchQuery) ||
-                            productDesc.contains(searchQuery) ||
-                            productCategory.contains(searchQuery) -> partialMatches.add(product)
-                    product.tags.any { it.lowercase().contains(searchQuery) } -> tagMatches.add(product)
-                }
-            }
-
-            // Return results in order of relevance
-            (exactMatches + partialMatches + tagMatches).distinctBy { it.id }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error searching products with query: $query", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Get product by ID with null safety
-     */
-    fun getProductById(productId: Int): Product? {
-        return try {
-            getProducts().find { it.id == productId }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting product by ID: $productId", e)
-            null
-        }
-    }
-
-    // UTILITY METHODS
-
-    /**
-     * Get API status and message
-     */
-    fun getApiStatus(): Pair<String, String> {
-        return try {
-            val response = loadApiData()
-            response?.let {
-                Pair(it.status, it.message)
-            } ?: Pair("error", "Failed to load data")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting API status", e)
-            Pair("error", "Exception: ${e.message}")
-        }
-    }
-
-    /**
-     * Clear cache and reload data
-     */
-    fun refreshData() {
-        try {
-            cachedApiResponse = null
-            Log.d(TAG, "Data cache cleared")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error refreshing data", e)
-        }
-    }
-
-    /**
-     * Get total product count
-     */
-    fun getTotalProductCount(): Int {
-        return try {
-            getProducts().size
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting total product count", e)
-            0
-        }
-    }
-
-    /**
-     * Get category product count with updated counts
-     */
-    fun getCategoryProductCount(categoryName: String): Int {
-        return try {
-            getProductsByCategory(categoryName).size
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting category product count for: $categoryName", e)
-            0
-        }
-    }
-
-    /**
-     * Get updated categories with current product counts
-     */
-    fun getCategoriesWithUpdatedCounts(): List<Category> {
-        return try {
-            val categories = getCategories().toMutableList()
-            categories.forEach { category ->
-                val updatedCategory = category.copy(
-                    count = getCategoryProductCount(category.name)
-                )
-                val index = categories.indexOf(category)
-                categories[index] = updatedCategory
-            }
-            categories
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating category counts", e)
-            getCategories()
-        }
-    }
-
-    // ASYNC METHODS (for future use)
-
-    /**
-     * Load products asynchronously
-     */
-    fun getProductsAsync(callback: ApiCallback<List<Product>>) {
-        coroutineScope.launch {
-            try {
-                val products = getProducts()
-                withContext(Dispatchers.Main) {
-                    callback.onSuccess(products)
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    callback.onError("Failed to load products: ${e.message}")
-                }
-            }
-        }
-    }
-
-    /**
-     * Search products asynchronously
-     */
-    fun searchProductsAsync(query: String, callback: ApiCallback<List<Product>>) {
-        coroutineScope.launch {
-            try {
-                val results = searchProducts(query)
-                withContext(Dispatchers.Main) {
-                    callback.onSuccess(results)
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    callback.onError("Search failed: ${e.message}")
-                }
-            }
-        }
-    }
-
-    // FALLBACK DATA METHODS
-
-    private fun getFallbackProducts(): List<Product> {
+    private fun createFallbackProducts(): List<Product> {
         return listOf(
             Product(
                 id = 1,
                 name = "Organic Tomatoes",
-                description = "Fresh organic produce from local farms",
+                description = "Fresh organic produce from local farms. Rich in vitamins and perfect for cooking.",
                 price = 2.99,
                 priceUnit = "per kg",
                 category = "Vegetables",
                 subcategory = "Organic",
-                imageRes = "ic_tomato",
+                imageRes = "ic_tomatoes",
                 rating = 4.8,
                 reviewCount = 24,
                 badge = "Organic",
                 inStock = true,
                 stockQuantity = 150,
-                nutritionInfo = NutritionInfo("18 per 100g", vitaminC = "High"),
-                tags = listOf("organic", "fresh", "local")
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("organic", "fresh", "local", "vitamin-rich")
             ),
             Product(
                 id = 2,
                 name = "Sweet Carrots",
-                description = "Sweet farm-fresh carrots, perfect for snacking",
+                description = "Sweet farm-fresh carrots, perfect for snacking and cooking. High in beta-carotene.",
                 price = 1.49,
                 priceUnit = "per kg",
                 category = "Vegetables",
@@ -741,13 +389,13 @@ class ApiHelper(private val context: Context) {
                 inStock = true,
                 stockQuantity = 200,
                 discount = 10,
-                nutritionInfo = NutritionInfo("41 per 100g", vitaminA = "Very High"),
-                tags = listOf("sweet", "fresh", "crunchy")
+                isFavorite = false,
+                tags = listOf("sweet", "fresh", "beta-carotene", "crunchy")
             ),
             Product(
                 id = 3,
                 name = "Red Apples",
-                description = "Juicy red apples with natural sweetness",
+                description = "Juicy red apples, perfect for snacking. Crisp texture with natural sweetness.",
                 price = 3.99,
                 priceUnit = "per kg",
                 category = "Fruits",
@@ -758,46 +406,235 @@ class ApiHelper(private val context: Context) {
                 badge = "Premium",
                 inStock = true,
                 stockQuantity = 120,
+                discount = 0,
                 isFavorite = true,
-                nutritionInfo = NutritionInfo("52 per 100g", vitaminC = "Medium"),
-                tags = listOf("juicy", "sweet", "crisp")
+                tags = listOf("juicy", "sweet", "crisp", "premium")
+            ),
+            Product(
+                id = 4,
+                name = "Russet Potatoes",
+                description = "Organic russet potatoes, great for cooking, baking, and making fries.",
+                price = 1.29,
+                priceUnit = "per kg",
+                category = "Vegetables",
+                subcategory = "Root Vegetables",
+                imageRes = "ic_potato",
+                rating = 4.5,
+                reviewCount = 32,
+                badge = "Organic",
+                inStock = true,
+                stockQuantity = 300,
+                discount = 5,
+                isFavorite = false,
+                tags = listOf("organic", "versatile", "cooking", "baking")
+            ),
+            Product(
+                id = 5,
+                name = "Baby Spinach",
+                description = "Fresh baby spinach leaves, perfect for salads and smoothies. Packed with iron.",
+                price = 2.49,
+                priceUnit = "per bundle",
+                category = "Vegetables",
+                subcategory = "Leafy Greens",
+                imageRes = "ic_spinach",
+                rating = 4.7,
+                reviewCount = 28,
+                badge = "Fresh",
+                inStock = true,
+                stockQuantity = 80,
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("baby", "fresh", "iron-rich", "salad")
+            ),
+            Product(
+                id = 6,
+                name = "Organic Lettuce",
+                description = "Crisp fresh lettuce leaves, perfect for salads and sandwiches.",
+                price = 1.99,
+                priceUnit = "per head",
+                category = "Vegetables",
+                subcategory = "Leafy Greens",
+                imageRes = "ic_lettuce",
+                rating = 4.4,
+                reviewCount = 15,
+                badge = "Organic",
+                inStock = true,
+                stockQuantity = 60,
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("organic", "crisp", "fresh", "salad")
+            ),
+            Product(
+                id = 7,
+                name = "Bell Peppers Mix",
+                description = "Colorful bell peppers mix - red, yellow, and green. Perfect for cooking and salads.",
+                price = 3.49,
+                priceUnit = "per pack",
+                category = "Vegetables",
+                subcategory = "Peppers",
+                imageRes = "ic_bell_pepper",
+                rating = 4.6,
+                reviewCount = 21,
+                badge = "Premium",
+                inStock = true,
+                stockQuantity = 90,
+                discount = 15,
+                isFavorite = true,
+                tags = listOf("colorful", "mix", "vitamin-c", "premium")
+            ),
+            Product(
+                id = 8,
+                name = "Green Cucumbers",
+                description = "Fresh green cucumbers, perfect for salads, sandwiches, and healthy snacking.",
+                price = 1.79,
+                priceUnit = "per kg",
+                category = "Vegetables",
+                subcategory = "Vine Vegetables",
+                imageRes = "ic_cucumber",
+                rating = 4.3,
+                reviewCount = 19,
+                badge = "Fresh",
+                inStock = true,
+                stockQuantity = 140,
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("fresh", "hydrating", "low-calorie", "crunchy")
+            ),
+            Product(
+                id = 9,
+                name = "Fresh Broccoli",
+                description = "Fresh green broccoli crowns, packed with nutrients and perfect for steaming or stir-frying.",
+                price = 2.29,
+                priceUnit = "per head",
+                category = "Vegetables",
+                subcategory = "Cruciferous",
+                imageRes = "ic_broccoli",
+                rating = 4.5,
+                reviewCount = 26,
+                badge = "Fresh",
+                inStock = true,
+                stockQuantity = 75,
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("fresh", "nutritious", "vitamin-rich", "superfood")
+            ),
+            Product(
+                id = 10,
+                name = "Sweet Corn",
+                description = "Fresh sweet corn on the cob, perfect for grilling, boiling, or roasting.",
+                price = 0.79,
+                priceUnit = "per ear",
+                category = "Vegetables",
+                subcategory = "Grain Vegetables",
+                imageRes = "ic_corn",
+                rating = 4.7,
+                reviewCount = 33,
+                badge = "Fresh",
+                inStock = true,
+                stockQuantity = 180,
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("sweet", "fresh", "grilling", "summer")
+            ),
+            Product(
+                id = 11,
+                name = "Red Onions",
+                description = "Fresh red onions with mild flavor, perfect for salads, cooking, and caramelizing.",
+                price = 1.19,
+                priceUnit = "per kg",
+                category = "Vegetables",
+                subcategory = "Bulb Vegetables",
+                imageRes = "ic_onion",
+                rating = 4.2,
+                reviewCount = 14,
+                badge = "Fresh",
+                inStock = true,
+                stockQuantity = 220,
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("red", "mild", "cooking", "versatile")
+            ),
+            Product(
+                id = 12,
+                name = "Green Beans",
+                description = "Tender green beans, perfect for steaming, sautéing, or adding to casseroles.",
+                price = 2.99,
+                priceUnit = "per kg",
+                category = "Vegetables",
+                subcategory = "Pod Vegetables",
+                imageRes = "ic_green_beans",
+                rating = 4.4,
+                reviewCount = 22,
+                badge = "Fresh",
+                inStock = true,
+                stockQuantity = 110,
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("tender", "green", "fresh", "versatile")
+            ),
+            Product(
+                id = 13,
+                name = "Golden Bananas",
+                description = "Ripe golden bananas, perfect for snacking, smoothies, and baking.",
+                price = 1.89,
+                priceUnit = "per bunch",
+                category = "Fruits",
+                subcategory = "Tropical Fruits",
+                imageRes = "ic_banana",
+                rating = 4.8,
+                reviewCount = 67,
+                badge = "Fresh",
+                inStock = true,
+                stockQuantity = 95,
+                discount = 0,
+                isFavorite = true,
+                tags = listOf("golden", "ripe", "potassium", "energy")
+            ),
+            Product(
+                id = 14,
+                name = "Organic Strawberries",
+                description = "Sweet organic strawberries, perfect for desserts, smoothies, and snacking.",
+                price = 4.99,
+                priceUnit = "per basket",
+                category = "Fruits",
+                subcategory = "Berries",
+                imageRes = "ic_strawberry",
+                rating = 4.9,
+                reviewCount = 89,
+                badge = "Organic",
+                inStock = true,
+                stockQuantity = 45,
+                discount = 20,
+                isFavorite = true,
+                tags = listOf("organic", "sweet", "antioxidants", "premium")
+            ),
+            Product(
+                id = 15,
+                name = "Fresh Lemons",
+                description = "Juicy fresh lemons, perfect for cooking, drinks, and adding zest to dishes.",
+                price = 2.49,
+                priceUnit = "per kg",
+                category = "Fruits",
+                subcategory = "Citrus Fruits",
+                imageRes = "ic_lemon",
+                rating = 4.6,
+                reviewCount = 31,
+                badge = "Fresh",
+                inStock = true,
+                stockQuantity = 160,
+                discount = 0,
+                isFavorite = false,
+                tags = listOf("juicy", "citrus", "vitamin-c", "zesty")
             )
         )
     }
 
-    private fun getDefaultCategories(): List<Category> {
+    private fun createFallbackCategories(): List<Category> {
         return listOf(
-            Category(1, "All", 0, true),
-            Category(2, "Vegetables", 0, false),
-            Category(3, "Fruits", 0, false),
-            Category(4, "Organic", 0, false)
+            Category(1, "Vegetables", 15),
+            Category(2, "Fruits", 12),
+            Category(3, "Dairy", 8),
+            Category(4, "Meat", 6)
         )
-    }
-
-    private fun getDefaultFilterOptions(): FilterOptions {
-        return FilterOptions(
-            priceRanges = listOf(
-                PriceRange(0.0, 1.0, "Under $1"),
-                PriceRange(1.0, 2.0, "$1 - $2"),
-                PriceRange(2.0, 3.0, "$2 - $3"),
-                PriceRange(3.0, 5.0, "$3 - $5"),
-                PriceRange(5.0, 999.0, "Above $5")
-            ),
-            badges = listOf("Fresh", "Organic", "Premium"),
-            ratings = listOf(4.0, 4.5, 4.8)
-        )
-    }
-
-    /**
-     * Clean up resources
-     */
-    fun cleanup() {
-        try {
-            coroutineScope.cancel()
-            cachedApiResponse = null
-            Log.d(TAG, "ApiHelper cleaned up")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during cleanup", e)
-        }
     }
 }

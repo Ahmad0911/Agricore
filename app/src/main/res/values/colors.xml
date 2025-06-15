@@ -16,6 +16,19 @@
     <color name="primaryColor">#388E3C</color> <!-- Green -->
     <color name="secondaryColor">#FFA000</color> <!-- Amber -->
     <color name="backgroundColor">#FFFFFF</color>
+    <color name="gradient_end_blue">#FF00BFFF</color>
+    <!-- Error Colors -->
+    <color name="error_text">#D32F2F</color>  <!-- Dark red for error text -->
+    <color name="error_background">#FFCDD2</color>  <!-- Light red for error backgrounds -->
+
+    <!-- Theme Colors -->
+    <color name="primary">#3F51B5</color>     <!-- Indigo primary color -->
+    <color name="primary_light">#C5CAE9</color> <!-- Lighter indigo -->
+    <color name="secondary">#FF4081</color>   <!-- Pink accent color -->
+    <color name="accent">#00BCD4</color>     <!-- Cyan accent color -->
+
+    <!-- Text Colors -->
+    <color name="text_primary">#212121</color> <!-- Dark gray for primary text -->
 
     <!-- Surface/Background Colors -->
     <color name="colorBackground">#FFFFFF</color>
@@ -38,6 +51,17 @@
     <color name="colorOnError">#FFFFFF</color>
     <color name="colorErrorContainer">#FFDAD6</color>
     <color name="colorOnErrorContainer">#410002</color>
+    <!-- Standard status colors -->
+    <color name="error_red">#F44336</color>       <!-- Red for errors/out of stock -->
+    <color name="warning_orange">#FF9800</color>  <!-- Orange for warnings/low stock -->
+    <color name="success_green">#4CAF50</color>    <!-- Green for success/in stock -->
+
+    <!-- UI colors -->
+    <color name="favorite_red">#E91E63</color>    <!-- Pinkish-red for favorite state -->
+    <color name="icon_gray">#9E9E9E</color>       <!-- Gray for inactive icons -->
+
+    <!-- Optional: Add these if you want text colors too -->
+    <color name="text_secondary">#757575</color>   <!-- Secondary text color -->
 
     <!-- Green Color Palette -->
     <color name="green_50">#E8F5E9</color>
@@ -50,6 +74,15 @@
     <color name="green_800">#2E7D32</color>
     <color name="green_900">#1B5E20</color>
     <color name="purple_400">#7E57C2</color>
+    <!-- Badge Colors -->
+
+
+    <color name="blue_100">#E3F2FD</color>
+    <color name="blue_500">#2196F3</color>
+
+    <color name="gold_100">#FFF8E1</color>
+    <color name="gold_500">#FFC107</color>
+
 
 
 
@@ -95,4 +128,41 @@
     <color name="transparent">#00000000</color>
     <color name="semi_transparent_black">#80000000</color>
     <color name="semi_transparent_white">#80FFFFFF</color>
+    <color name="superfood_badge_bg">#FF6B6B</color>
+    <color name="superfood_badge_border">#FF5252</color>
+
+    <color name="organic_badge_bg">#4CAF50</color>
+    <color name="organic_badge_border">#388E3C</color>
+
+    <color name="fresh_badge_bg">#03A9F4</color>
+    <color name="fresh_badge_border">#0288D1</color>
+
+    <color name="premium_badge_bg">#FFC107</color>
+    <color name="premium_badge_border">#FFA000</color>
+
+    <color name="local_badge_bg">#9C27B0</color>
+    <color name="local_badge_border">#7B1FA2</color>
+
+    <color name="default_badge_bg">#9E9E9E</color>
+    <color name="default_badge_border">#757575</color>
+
+    <!-- Badge text colors -->
+    <color name="superfood_badge_text">#FFFFFF</color>
+    <color name="organic_badge_text">#FFFFFF</color>
+    <color name="fresh_badge_text">#FFFFFF</color>
+    <color name="premium_badge_text">#212121</color>
+    <color name="local_badge_text">#FFFFFF</color>
+    <color name="default_badge_text">#FFFFFF</color>
+
+    <!-- Stock status colors -->
+    <color name="out_of_stock_text">#F44336</color>  <!-- Red -->
+    <color name="low_stock_text">#FF9800</color>     <!-- Orange -->
+    <color name="in_stock_text">#4CAF50</color>      <!-- Green -->
+
+    <!-- Favorite colors -->
+    <color name="favorite_active">#F44336</color>    <!-- Red -->
+    <color name="favorite_inactive">#9E9E9E</color> <!-- Gray -->
+
+    <!-- Empty state icon -->
+    <color name="empty_icon_tint">#BDBDBD</color>
 </resources>
