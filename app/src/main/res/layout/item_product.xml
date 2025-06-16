@@ -160,7 +160,7 @@
                 android:layout_marginTop="12dp"
                 android:backgroundTint="@color/green_500"
                 android:text="@string/add_to_cart"
-                android:textColor="@color/green_500"
+                android:textColor="@color/white"
                 app:strokeColor="@color/green_500"
                 app:strokeWidth="1dp"/>
         </LinearLayout>

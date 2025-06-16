@@ -152,6 +152,77 @@
         <string name="something_went_wrong">Something went wrong</string>
         <string name="retry">Retry</string>
         <string name="toggle_view_mode">Toggle view mode</string>
+        <string name="current_season">Current Season</string>
+        <string name="expand_icon_desc">Expand icon</string>
+        <string name="detailed_tips">Detailed Tips</string>
+        <string name="bookmark">Bookmark</string>
+        <string name="share">Share</string>
+        <!-- Weather descriptions -->
+        <string name="weather_icon_desc">Weather icon</string>
+        <string name="humidity_icon_desc">Humidity icon</string>
+        <string name="rain_icon_desc">Rain icon</string>
+        <string name="wind_icon_desc">Wind icon</string>
+        <string name="pressure_icon_desc">Pressure icon</string>
+        <string name="uv_icon_desc">UV index icon</string>
+
+        <!-- Weather labels -->
+        <string name="wind">Wind</string>
+        <string name="pressure">Pressure</string>
+        <string name="uv_index">UV Index</string>
+        <!-- App Info -->
+        <string name="app_description">AgriCore helps farmers optimize their crops with smart agricultural solutions.</string>
+        <string name="app_logo_desc">AgriCore application logo</string>
+        <string name="about_app_title">About AgriCore</string>
+
+        <!-- Team Section -->
+        <string name="our_team_title">Our Team</string>
+        <string name="team_description">Meet the dedicated team behind AgriCore\'s innovative farming solutions.</string>
+
+        <!-- Contact Section -->
+        <string name="contact_us_title">Contact Us</string>
+        <string name="phone">+1 (555) 123-4567</string>
+        <string name="website">www.agricore.example.com</string>
+
+
+        <!-- Social Media -->
+        <string name="follow_us_title">Follow Us</string>
+        <string name="facebook">Facebook</string>
+        <string name="twitter">Twitter</string>
+        <string name="instagram">Instagram</string>
+        <string name="humidity">Humidity</string>
+        <string name="forecast_title">7-Day Forecast</string>
+        <string name="refresh">Refresh weather data</string>
+        <string name="home">Home</string>
+        <string name="cart">Cart</string>
+        <string name="expand_collapse_tips">Expand or collapse planting tips</string>
+        <string name="profile">Profile</string>
+        <string name="loading_weather">Loading Weather</string>
+
+        <!-- Legal -->
+        <string name="privacy_policy">Privacy Policy</string>
+        <string name="terms_of_service">Terms of Service</string>
+        <string name="support">Support</string>
+        <string name="copyright_text">© 2023 AgriCore. All rights reserved.</string>
+        <!-- Quick Access Section -->
+        <string name="quick_access">Quick Access</string>
+        <string name="seeds_desc">Seeds icon</string>
+        <string name="seeds">Seeds</string>
+        <string name="fertilizers_desc">Fertilizers icon</string>
+        <string name="fertilizers">Fertilizers</string>
+        <string name="tools_desc">Tools icon</string>
+        <string name="tools">Tools</string>
+        <string name="pesticides_desc">Pesticides icon</string>
+        <string name="pesticides">Pesticides</string>
+        <!-- Search Button Description -->
+        <string name="search_button_desc">Search products</string>
+
+        <!-- Products Section -->
+        <string name="all_products">All Products</string>
+        <string name="browse_all_products">Browse All Products</string>
+        <string name="check_internet_connection">Check your internet connection</string>
+
+        <!-- Cart -->
+        <string name="view_cart">View Cart</string>
 
 
 

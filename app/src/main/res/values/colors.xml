@@ -17,6 +17,10 @@
     <color name="secondaryColor">#FFA000</color> <!-- Amber -->
     <color name="backgroundColor">#FFFFFF</color>
     <color name="gradient_end_blue">#FF00BFFF</color>
+    <color name="bottom_nav_item_color">#FF6D00</color>
+    <color name="background">#FAFAFA</color>
+    <color name="purple_100">#E1BEE7</color>
+    <color name="seasonal_badge_color">#4CAF50</color>
     <!-- Error Colors -->
     <color name="error_text">#D32F2F</color>  <!-- Dark red for error text -->
     <color name="error_background">#FFCDD2</color>  <!-- Light red for error backgrounds -->
@@ -165,4 +169,24 @@
 
     <!-- Empty state icon -->
     <color name="empty_icon_tint">#BDBDBD</color>
+    <!-- Add these colors to your res/values/colors.xml file -->
+
+        <!-- Text colors -->
+    <color name="dark_gray">#2E2E2E</color>
+    <color name="medium_gray">#555555</color>
+
+        <!-- Chip colors for better contrast -->
+    <color name="light_blue">#E3F2FD</color>
+    <color name="dark_blue">#1565C0</color>
+
+    <color name="light_green">#E8F5E8</color>
+    <color name="dark_green">#2E7D32</color>
+
+    <color name="light_orange">#FFF3E0</color>
+    <color name="dark_orange">#F57C00</color>
+
+        <!-- Seasonal badge colors -->
+    <color name="seasonal_badge_bg">#4CAF50</color>
+    <color name="seasonal_badge_text">#FFFFFF</color>
+
 </resources>

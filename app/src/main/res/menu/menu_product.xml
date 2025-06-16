@@ -3,6 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_search"
+        android:title="Search"
+        android:icon="@drawable/ic_search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="ifRoom|collapseActionView"/>
+
+    <item
         android:id="@+id/action_favorites"
         android:title="Favorites"
         android:icon="@drawable/ic_favourite_filled"
@@ -14,22 +21,15 @@
         android:icon="@drawable/ic_shopping_cart"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/action_filter"
-        android:title="Filter"
-        android:icon="@drawable/ic_filter"
-        app:showAsAction="ifRoom"/>
+        android:id="@+id/action_view_toggle"
+        android:title="View Toggle"
+        android:icon="@android:drawable/ic_menu_view"
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_sort"
         android:title="Sort"
-        android:icon="@drawable/ic_farm_illustration"
+        android:icon="@drawable/ic_sort"
         app:showAsAction="ifRoom"/>
-
-    <item
-        android:id="@+id/action_search"
-        android:title="Search"
-        android:icon="@drawable/ic_search"
-        app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:showAsAction="ifRoom|collapseActionView"/>
 
 </menu>

@@ -161,7 +161,8 @@ class ApiHelper(private val context: Context) {
             "corn" to "ic_corn",
             "onion" to "ic_onion",
             "strawberry" to "ic_strawberry",
-            "lemon" to "ic_lemon"
+            "lemon" to "ic_lemon",
+            "green_beans" to "ic_green_beans"
         )
 
         /**
